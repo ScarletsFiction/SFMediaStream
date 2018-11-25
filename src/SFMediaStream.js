@@ -311,7 +311,7 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 		
 		var index = realtimeBufferInterval;
 		realtimeBufferInterval++;
-		if(realtimeBufferInterval>3)
+		if(realtimeBufferInterval > 2)
 			realtimeBufferInterval = 0;
 
 		if(scope.webAudio){
@@ -321,10 +321,10 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 					scope.bufferElement[index].start(scope.bufferSkip);
 				});
 			};
-			fileReader.readAsArrayBuffer(new Blob([bufferHeader, arrayBuffer[0]], scope.mimeType));
+			fileReader.readAsArrayBuffer(new Blob([bufferHeader, arrayBuffer[0]], {type:scope.mimeType}));
 		} else { // HTML5 Audio
 			URL.revokeObjectURL(scope.bufferElement[index].src);
-			scope.bufferElement[index].src = URL.createObjectURL(new Blob([bufferHeader, arrayBuffer[0]], scope.mimeType));
+			scope.bufferElement[index].src = URL.createObjectURL(new Blob([bufferHeader, arrayBuffer[0]], {type:scope.mimeType}));
 			scope.bufferElement[index].load();
 			scope.bufferElement[index].play();
 			scope.bufferElement[index].currentTime = scope.bufferSkip;
@@ -344,9 +344,9 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 					webAudioBufferInsert(index, buffer);
 				});
 			};
-			fileReader.readAsArrayBuffer(new Blob([bufferHeader, scope.bufferPending[0]], scope.mimeType));
+			fileReader.readAsArrayBuffer(new Blob([bufferHeader, scope.bufferPending[0]], {type:scope.mimeType}));
 		} else { // HTML5 Audio
-			scope.bufferElement[index].src = URL.createObjectURL(new Blob([bufferHeader, scope.bufferPending[0]], scope.mimeType));
+			scope.bufferElement[index].src = URL.createObjectURL(new Blob([bufferHeader, scope.bufferPending[0]], {type:scope.mimeType}));
 			scope.bufferElement[index].load();
 		}
 
