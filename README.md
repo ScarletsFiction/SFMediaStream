@@ -12,20 +12,13 @@ A HTML5 media streamer library for playing music, video, or even microphone & ca
 This class is used for streaming local media like camera or microphone to the server.
 
 #### Properties
-###### debug
-Set to true for outputting any message to browser console
-
-###### mediaRecorder
-Return current `mediaRecorder` that being used
-
-###### recordingReady
-Return true if the recording was ready
-
-###### recording
-Return true if currently recording
-
-###### options.mimeType
-Return mimeType that being used
+| Property  | Details |
+| --- | --- |
+| debug | Set to true for outputting any message to browser console |
+| mediaRecorder | Return current `mediaRecorder` that being used |
+| recordingReady | Return true if the recording was ready |
+| recording | Return true if currently recording |
+| options.mimeType | Return mimeType that being used |
 
 ```js
 // Example for accessing the properties
@@ -99,41 +92,20 @@ var audioStreamer = new ScarletsAudioBufferStreamer(bufferStorage, chunksDuratio
 ```
 
 #### Properties
-###### debug
-Set to true for outputting any message to browser console
-
-###### currentBuffer
-Return index of Selected buffer that will be played
-
-###### playing
-Return true if playing a stream
-
-###### buffering
-Return true if playing a buffer
-
-###### streaming
-Return true when streaming
-
-###### currentDuration
-Return current duration in seconds
-
-###### latency
-Return current latency
-
-###### realtime
-Set to true if you want to instanly play received buffer
-
-###### bufferSkip
-Set this if you want to skip some seconds
-
-###### mimeType
-Return mimeType of current streamed media
-
-###### webAudio
-Set to false for using HTML5 media element
-
-###### audioContext
-Return `audioContext` that being used
+| Property  | Details |
+| --- | --- |
+| debug | Set to true for outputting any message to browser console |
+| currentBuffer | Return index of Selected buffer that will be played |
+| playing | Return true if playing a stream |
+| buffering | Return true if playing a buffer |
+| streaming | Return true when streaming |
+| currentDuration | Return current duration in seconds |
+| latency | Return current latency |
+| realtime | Set to true if you want to instanly play received buffer |
+| bufferSkip | Set this if you want to skip some seconds |
+| mimeType | Return mimeType of current streamed media |
+| webAudio | Set to false for using HTML5 media element |
+| audioContext | Return `audioContext` that being used |
 
 ```js
 // Example for accessing the properties
@@ -193,59 +165,26 @@ var mediaPlayer = new ScarletsMediaPlayer(document.querySelector('audio'));
 ```
 
 #### Properties
-###### autoplay
-Sets or returns whether the audio/video should start playing as soon as it is loaded
-
-###### preload
-Sets or returns whether the audio/video should be loaded when the page loads
-
-###### loop
-Sets or returns whether the audio/video should start over again when finished
-
-###### buffered
-Returns a TimeRanges object representing the buffered parts of the audio/video
-
-###### preload
-Sets or returns whether the audio/video should be loaded when the page loads ("none", "metadata", "auto")
-
-###### buffered
-Returns a TimeRanges object representing the buffered parts of the audio/video
-
-###### controller
-Returns the MediaController object representing the current media controller of the audio/video
-
-###### currentTime
-Sets or returns the current playback position in the audio/video (in seconds)
-
-###### currentSrc
-Returns the URL of the current audio/video
-
-###### duration
-Returns the length of the current audio/video (in seconds)
-
-###### ended
-Returns whether the playback of the audio/video has ended or not
-
-###### error
-Returns a MediaError object representing the error state of the audio/video
-
-###### readyState
-Returns the current ready state of the audio/video
-
-###### networkState
-Returns the current network state of the audio/video
-
-###### paused
-Returns whether the audio/video is paused or not
-
-###### played
-Returns a TimeRanges object representing the played parts of the audio/video
-
-###### seekable
-Returns a TimeRanges object representing the seekable parts of the audio/video
-
-###### seeking
-Returns whether the user is currently seeking in the audio/video
+| Property  | Details |
+| --- | --- |
+| autoplay | Sets or returns whether the audio/video should start playing as soon as it is loaded |
+| preload | Sets or returns whether the audio/video should be loaded when the page loads |
+| loop | Sets or returns whether the audio/video should start over again when finished |
+| buffered | Returns a TimeRanges object representing the buffered parts of the audio/video |
+| preload | Sets or returns whether the audio/video should be loaded when the page loads ("none", "metadata", "auto") |
+| buffered | Returns a TimeRanges object representing the buffered parts of the audio/video |
+| controller | Returns the MediaController object representing the current media controller of the audio/video |
+| currentTime | Sets or returns the current playback position in the audio/video (in seconds) |
+| currentSrc | Returns the URL of the current audio/video |
+| duration | Returns the length of the current audio/video (in seconds) |
+| ended | Returns whether the playback of the audio/video has ended or not |
+| error | Returns a MediaError object representing the error state of the audio/video |
+| readyState | Returns the current ready state of the audio/video |
+| networkState | Returns the current network state of the audio/video |
+| paused | Returns whether the audio/video is paused or not |
+| played | Returns a TimeRanges object representing the played parts of the audio/video |
+| seekable | Returns a TimeRanges object representing the seekable parts of the audio/video |
+| seeking | Returns whether the user is currently seeking in the audio/video |
 
 ```js
 // Example for accessing the properties
@@ -354,14 +293,11 @@ mediaPlayer.once('abort', function(e){
 | waiting | Fires when the video stops because it needs to buffer the next frame |
 
 #### Video Properties
-###### poster
-Specifies an image to be shown while the video is downloading, or until the user hits the play button
-
-###### height
-Sets the height of the video player
-
-###### width
-Sets the width of the video player
+| Property  | Details |
+| --- | --- |
+| poster | Specifies an image to be shown while the video is downloading, or until the user hits the play button |
+| height | Sets the height of the video player |
+| width | Sets the width of the video player |
 
 ```js
 // Example for accessing the properties
@@ -378,20 +314,13 @@ mediaPlayer.audioFadeEffect = true;
 This will be available on current media player
 
 ##### Properties
-###### currentIndex
-Return index of current playing media
-
-###### list
-Return array playlist that are being used
-
-###### original
-Return original array playlist
-
-###### loop
-Set this to true if you want to play this playlist again from beginning
-
-###### shuffled
-Return true if the list was shuffled
+| Property  | Details |
+| --- | --- |
+| currentIndex | Return index of current playing media |
+| list | Return array playlist that are being used |
+| original | Return original array playlist |
+| loop | Set this to true if you want to play this playlist again from beginning |
+| shuffled | Return true if the list was shuffled |
 
 ```js
 // Example for accessing the properties
