@@ -418,12 +418,12 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 
 // https://www.w3schools.com/tags/ref_av_dom.asp
 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
-var ScarletsMediaPlayer = function(element){
+window.ScarletsMediaPlayer = function(element){
 	// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
 	var self = this;
 
 	var functionLinker = ['load', 'canPlayType'];
-	var propertyLinker = ['autoplay', 'preload', 'loop', 'buffered', 'preload', 'buffered', 'controller', 'currentTime', 'duration', 'ended', 'error', 'readyState', 'networkState', 'paused', 'played', 'seekable', 'seeking'];
+	var propertyLinker = ['autoplay', 'preload', 'loop', 'buffered', 'preload', 'buffered', 'controller', 'currentTime', 'currentSrc', 'duration', 'ended', 'error', 'readyState', 'networkState', 'paused', 'played', 'seekable', 'seeking'];
 
 	if(element.tagName === 'video'){
 		propertyLinker = propertyLinker.concat(['poster', 'height', 'width']);
@@ -689,10 +689,3 @@ function fadeNumber(from, to, increment, fadeTime, onIncrease, onFinish){
 		if(onIncrease) onIncrease(current); 
 	}, interval);
 }
-
-/*
-	https://github.com/nkzawa/socket.io-stream/issues/73
-	https://www.quora.com/How-do-I-broadcast-live-audio-using-Socket-io
-	https://stackoverflow.com/questions/48405471/stream-live-audio-using-socket-io
-	https://stackoverflow.com/questions/25752138/streaming-microphone-through-sockets-using-socket-io-and-node-js
-*/
