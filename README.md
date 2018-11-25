@@ -28,6 +28,7 @@ Return true if currently recording
 Return mimeType that being used
 
 ```js
+// Example for accessing the properties
 presenterMedia.debug = true;
 ```
 
@@ -135,6 +136,7 @@ Set to false for using HTML5 media element
 Return `audioContext` that being used
 
 ```js
+// Example for accessing the properties
 audioStreamer.debug = true;
 ```
 
@@ -244,7 +246,9 @@ Returns a TimeRanges object representing the seekable parts of the audio/video
 
 ###### seeking
 Returns whether the user is currently seeking in the audio/video
+
 ```js
+// Example for accessing the properties
 mediaPlayer.preload = "metadata";
 ```
 
@@ -358,7 +362,9 @@ Sets the height of the video player
 
 ###### width
 Sets the width of the video player
+
 ```js
+// Example for accessing the properties
 mediaPlayer.poster = 'url.png';
 ```
 
@@ -388,6 +394,7 @@ Set this to true if you want to play this playlist again from beginning
 Return true if the list was shuffled
 
 ```js
+// Example for accessing the properties
 console.log('Current playlist count', mediaPlayer.playlist.original.length);
 ```
 
