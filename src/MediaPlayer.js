@@ -120,6 +120,7 @@ window.ScarletsMediaPlayer = function(element){
 			eventRegistered[name] = [];
 		}
 		eventRegistered[name].push(callback);
+		return self;
 	}
 
 	self.off = function(eventName, callback){
@@ -136,10 +137,25 @@ window.ScarletsMediaPlayer = function(element){
 			eventRegistered[name] = undefined;
 			element.removeEventListener(eventName, eventTrigger, true);
 		}
+		return self;
 	}
 
 	self.once = function(eventName, callback){
 		element.addEventListener(eventName, callback, {once:true});
+		return self;
+	}
+
+	var playlistInitialized = false;
+	function internalPlaylistEvent(){
+		if(playlistInitialized) return;
+		playlistInitialized = true;
+
+		self.on('ended', function(){
+			if(self.playlist.currentIndex < self.playlist.list.length - 1)
+				self.playlist.next(true);
+			else if(self.playlist.loop)
+				self.playlist.play(0);
+		});
 	}
 
 	self.playlist = {
@@ -154,6 +170,7 @@ window.ScarletsMediaPlayer = function(element){
 			this.original = lists;
 			if(this.shuffled)
 				this.shuffle(true);
+			internalPlaylistEvent();
 		},
 
 		// obj = {mp3:'main.mp3', ogg:'fallback.ogg'}
@@ -161,6 +178,7 @@ window.ScarletsMediaPlayer = function(element){
 			original.push(obj);
 			if(this.shuffled)
 				this.shuffle(true);
+			internalPlaylistEvent();
 		},
 
 		// index from 'original' property
@@ -170,17 +188,20 @@ window.ScarletsMediaPlayer = function(element){
 				this.shuffle(true);
 		},
 
-		next:function(index){
+		next:function(autoplay){
 			this.currentIndex++;
-			this.play(this.currentIndex);
+			if(autoplay)
+				this.play(this.currentIndex);
 		},
 
-		previous:function(index){
+		previous:function(autoplay){
 			this.currentIndex--;
-			this.play(this.currentIndex);
+			if(autoplay)
+				this.play(this.currentIndex);
 		},
 
 		play:function(index){
+			this.currentIndex = index;
 			self.prepare(Object.values(this.original[index]), function(){
 				self.play();
 			});
