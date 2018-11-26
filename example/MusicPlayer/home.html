@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+	<title>Music Test</title>
+	<script type="text/javascript" src="../../dist/SFMediaStream.min.js"></script>
+</head>
+<body>
+	<input type="text" id="debug">
+	<button onclick="Load()">Load</button>
+	<button onclick="Play()">Play</button>
+	<button onclick="Pause()">Pause</button>
+	<audio></audio>
+
+	<script type="text/javascript">
+		var mediaPlayer = new ScarletsMediaPlayer(document.querySelector('audio'));
+		var input = document.querySelector('input');
+		mediaPlayer.on('loadedmetadata', function(e){
+			console.log('Current seek:', mediaPlayer.currentTime+'s');
+			console.log("Total duration:", mediaPlayer.duration+'s');
+		});
+
+		function Play(){
+			mediaPlayer.play();
+		}
+
+		function Pause(){
+			mediaPlayer.pause();
+		}
+
+		function Load(){
+			mediaPlayer.prepare('test.mp3', function(){
+			    input.value = "Prepare complete";
+			});
+		}
+	</script>
+</body>
+</html>
