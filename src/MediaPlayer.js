@@ -168,24 +168,21 @@ window.ScarletsMediaPlayer = function(element){
 		// lists = [{mp3:'main.mp3', ogg:'fallback.ogg', ..}, ...]
 		reload:function(lists){
 			this.original = lists;
-			if(this.shuffled)
-				this.shuffle(true);
+			this.shuffle(this.shuffled);
 			internalPlaylistEvent();
 		},
 
 		// obj = {mp3:'main.mp3', ogg:'fallback.ogg'}
 		add:function(obj){
 			original.push(obj);
-			if(this.shuffled)
-				this.shuffle(true);
+			this.shuffle(this.shuffled);
 			internalPlaylistEvent();
 		},
 
 		// index from 'original' property
 		remove:function(index){
 			original.splice(index, 1);
-			if(this.shuffled)
-				this.shuffle(true);
+			this.shuffle(this.shuffled);
 		},
 
 		next:function(autoplay){
