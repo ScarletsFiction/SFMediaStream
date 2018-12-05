@@ -209,24 +209,39 @@ window.ScarletsMediaPlayer = function(element){
 
 		next:function(autoplay){
 			this.currentIndex++;
+			if(this.currentIndex >= this.list.length){
+				if(this.loop)
+					this.currentIndex = 0;
+				else{
+					this.currentIndex--;
+					return;
+				}
+			}
+
 			if(autoplay)
 				this.play(this.currentIndex);
-			playlistTriggerEvent('playlistchange');
+			else playlistTriggerEvent('playlistchange');
 		},
 
 		previous:function(autoplay){
 			this.currentIndex--;
+			if(this.currentIndex < 0){
+				if(this.loop)
+					this.currentIndex = this.list.length - 1;
+				else{
+					this.currentIndex++;
+					return;
+				}
+			}
+
 			if(autoplay)
 				this.play(this.currentIndex);
-			playlistTriggerEvent('playlistchange');
+			else playlistTriggerEvent('playlistchange');
 		},
 
 		play:function(index){
-			if(this.currentIndex != index){
-				this.currentIndex = index;
-				playlistTriggerEvent('playlistchange');
-			}
-			else this.currentIndex = index;
+			this.currentIndex = index;
+			playlistTriggerEvent('playlistchange');
 
 			self.prepare(this.list[index].stream, function(){
 				self.play();
