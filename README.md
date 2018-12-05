@@ -273,8 +273,8 @@ mediaPlayer.once('abort', function(e){
 | canplay | Fires when the browser can start playing the audio/video |
 | canplaythrough | Fires when the browser can play through the audio/video without stopping for buffering |
 | durationchange | Fires when the duration of the audio/video is changed |
-| emptied | Fires when the current playlist is empty |
-| ended | Fires when the current playlist is ended |
+| emptied | Fires when the current player is empty |
+| ended | Fires when the current player is ended |
 | error | Fires when an error occurred during the loading of an audio/video |
 | loadeddata | Fires when the browser has loaded the current frame of the audio/video |
 | loadedmetadata | Fires when the browser has loaded meta data for the audio/video |
@@ -291,6 +291,9 @@ mediaPlayer.once('abort', function(e){
 | timeupdate | Fires when the current playback position has changed |
 | volumechange | Fires when the volume has been changed |
 | waiting | Fires when the video stops because it needs to buffer the next frame |
+| playlistchange | Fires when the player starts another playlist |
+
+`playlistchange` the callback function will get `(player, playlist, index)` as the arguments.
 
 #### Video Properties
 | Property  | Details |
@@ -332,16 +335,18 @@ console.log('Current playlist count', mediaPlayer.playlist.original.length);
 Replace old playlist data
 ```js
 mediaPlayer.playlist.reload([{
-    mp3:'main.mp3',
-    ogg:'fallback.ogg',
-    ...
+    yourProperty:'',
+    stream:['main.mp3', 'fallback.ogg']
 }, ...]);
 ```
 
 ###### add
 Add new data to playlist
 ```js
-mediaPlayer.playlist.add({mp3:'main.mp3', ogg:'fallback.ogg'});
+mediaPlayer.playlist.add({
+    yourProperty:'',
+    stream:['main.mp3', 'fallback.ogg']
+});
 ```
 
 ###### remove
@@ -352,13 +357,13 @@ mediaPlayer.playlist.remove(0);
 ```
 
 ###### next
-Play next music
+Play next music, this will also trigger `playlistchange` event
 ```js
 mediaPlayer.playlist.next();
 ```
 
 ###### previous
-Play previous music
+Play previous music, this will also trigger `playlistchange` event
 ```js
 mediaPlayer.playlist.previous();
 ```
