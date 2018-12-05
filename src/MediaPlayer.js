@@ -51,7 +51,7 @@ window.ScarletsMediaPlayer = function(element){
 		if(self.audioFadeEffect){
 			element.volume = 0;
 			element.play();
-			fadeNumber(0, volume, -0.05, 400, function(num){
+			fadeNumber(0, volume, 0.02, 400, function(num){
 				element.volume = num;
 			}, callback);
 			return;
@@ -66,7 +66,7 @@ window.ScarletsMediaPlayer = function(element){
 			return;
 		}
 		if(self.audioFadeEffect){
-			fadeNumber(volume, 0, -0.05, 400, function(num){
+			fadeNumber(volume, 0, -0.02, 400, function(num){
 				element.volume = num;
 			}, function(){
 				element.pause();
@@ -145,6 +145,21 @@ window.ScarletsMediaPlayer = function(element){
 		return self;
 	}
 
+	self.destroy = function(){
+		for(var key in eventRegistered){
+			self.off(key);
+		}
+		self.playlist.list.splice(0);
+		self.playlist.original.splice(0);
+		for(var key in self){
+			delete self[key];
+		}
+		self = null;
+
+		element.pause();
+		element.innerHTML = '';
+	}
+
 	var playlistInitialized = false;
 	function internalPlaylistEvent(){
 		if(playlistInitialized) return;
@@ -158,6 +173,13 @@ window.ScarletsMediaPlayer = function(element){
 		});
 	}
 
+	function playlistTriggerEvent(name){
+		if(!eventRegistered[name]) return;
+		for (var i = 0; i < eventRegistered[name].length; i++) {
+			eventRegistered[name][i](self, self.playlist, self.playlist.currentIndex);
+		}
+	}
+
 	self.playlist = {
 		currentIndex:0,
 		list:[],
@@ -165,23 +187,23 @@ window.ScarletsMediaPlayer = function(element){
 		loop:false,
 		shuffled:false,
 
-		// lists = [{mp3:'main.mp3', ogg:'fallback.ogg', ..}, ...]
+		// lists = [{yourProperty:'', stream:['main.mp3', 'fallback.ogg', ..]}, ...]
 		reload:function(lists){
 			this.original = lists;
 			this.shuffle(this.shuffled);
 			internalPlaylistEvent();
 		},
 
-		// obj = {mp3:'main.mp3', ogg:'fallback.ogg'}
+		// obj = {yourProperty:'', stream:['main.mp3', 'fallback.ogg']}
 		add:function(obj){
-			original.push(obj);
+			this.original.push(obj);
 			this.shuffle(this.shuffled);
 			internalPlaylistEvent();
 		},
 
 		// index from 'original' property
 		remove:function(index){
-			original.splice(index, 1);
+			this.original.splice(index, 1);
 			this.shuffle(this.shuffled);
 		},
 
@@ -189,23 +211,27 @@ window.ScarletsMediaPlayer = function(element){
 			this.currentIndex++;
 			if(autoplay)
 				this.play(this.currentIndex);
+			playlistTriggerEvent('playlistchange');
 		},
 
 		previous:function(autoplay){
 			this.currentIndex--;
 			if(autoplay)
 				this.play(this.currentIndex);
+			playlistTriggerEvent('playlistchange');
 		},
 
 		play:function(index){
+			if(this.currentIndex != index)
+				playlistTriggerEvent('playlistchange');
+
 			this.currentIndex = index;
-			self.prepare(Object.values(this.original[index]), function(){
+			self.prepare(this.list[index].stream, function(){
 				self.play();
 			});
 		},
 
 		shuffle:function(set){
-			if(set === undefined) return this.shuffled;
 			if(set === true){
 			    var j, x, i;
 			    for (i = this.list.length - 1; i > 0; i--) {
