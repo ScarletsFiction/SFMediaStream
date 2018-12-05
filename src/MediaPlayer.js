@@ -222,10 +222,12 @@ window.ScarletsMediaPlayer = function(element){
 		},
 
 		play:function(index){
-			if(this.currentIndex != index)
+			if(this.currentIndex != index){
+				this.currentIndex = index;
 				playlistTriggerEvent('playlistchange');
+			}
+			else this.currentIndex = index;
 
-			this.currentIndex = index;
 			self.prepare(this.list[index].stream, function(){
 				self.play();
 			});
