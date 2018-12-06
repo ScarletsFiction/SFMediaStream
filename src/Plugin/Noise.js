@@ -1,15 +1,15 @@
-ScarletsMedia.noise = function(sample = 44100){
+ScarletsMedia.noise = function(){
 	var context = this.audioContext;
 	var output = context.createGain();
 
-	var length = Math.floor(sample * 9.73);
+	var length = Math.floor(context.sampleRate * 9.73);
 	var noiseFloat32 = new Float32Array(length);
 
 	for (var i = 0; i < length; i++) {
 		noiseFloat32[i] = Math.sqrt(-2.0 * Math.log(Math.random())) * Math.cos(2.0 * Math.PI * Math.random()) * 0.5;
 	}
 
-	var noiseBuffer = context.createBuffer(2, length, sample);
+	var noiseBuffer = context.createBuffer(2, length, context.sampleRate);
 	noiseBuffer.getChannelData(0).set(noiseFloat32, 0);
 	noiseBuffer.getChannelData(1).set(noiseFloat32, 0);
 
