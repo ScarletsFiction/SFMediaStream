@@ -77,3 +77,11 @@ function fadeNumber(from, to, increment, fadeTime, onIncrease, onFinish){
 		if(onIncrease) onIncrease(current); 
 	}, interval);
 }
+
+function normalize(value, min, max){
+	return ((max - min) * value) + min;
+}
+
+function denormalize(value, min, max){
+	return (value - min) / (min - max);
+}

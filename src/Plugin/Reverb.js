@@ -54,15 +54,15 @@ ScarletsMedia.reverb = function(sourceNode){
 			wetGainNode.gain.value = wet;
 		},
 
-		time: function(value){ // value: 0.001 ~ 10
-			if(time === undefined) return time;
-			time = value;
+		time: function(value){ // value: 0 ~ 1
+			if(value === undefined) return denormalize(time, 0.001, 10);
+			time = normalize(value, 0.001, 10);
 			rebuildImpulse();
 		},
 
-		decay: function(value){// value: 0.001 ~ 10
-			if(value === undefined) return decay;
-			decay = value;
+		decay: function(value){// value: 0 ~ 1
+			if(value === undefined) return denormalize(decay, 0.001, 10);
+			decay = normalize(value, 0.001, 10);
 			rebuildImpulse();
 		},
 
