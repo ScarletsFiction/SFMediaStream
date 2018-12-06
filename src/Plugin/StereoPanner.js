@@ -7,7 +7,7 @@ ScarletsMedia.stereoPanner = function(sourceNode){
 
 	var stereoSupport = false;
 	if(context.createStereoPanner){
-		var pannerNode = context.createStereoPanner;
+		var pannerNode = context.createStereoPanner();
 		stereoSupport = true;
 	}
 	else {
