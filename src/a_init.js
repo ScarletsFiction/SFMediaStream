@@ -11,5 +11,11 @@
 
 // Initialize global data
 window.ScarletsMedia = {
-	audioContext: window.AudioContext ? new AudioContext() : false
+	audioContext: window.AudioContext ? new AudioContext() : false,
+
+	// Get Audio Node from HTML5's audio tag
+	elementNode:function(elem){
+		elem.crossOrigin = 'anonymous';
+		return this.audioContext.createMediaElementSource(elem);
+	}
 }
