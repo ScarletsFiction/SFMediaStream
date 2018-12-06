@@ -2,9 +2,6 @@ ScarletsMedia.stereoPanner = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
 
-	var gain = context.createGain();
-	sourceNode.connect(gain);
-
 	var stereoSupport = false;
 	if(context.createStereoPanner){
 		var pannerNode = context.createStereoPanner();
@@ -23,7 +20,6 @@ ScarletsMedia.stereoPanner = function(sourceNode){
 		// Connect to output
 		// node.connect(context.destination);
 		node:output,
-		gain:gain.gain,
 
 		set:function(pan){ // pan: -1 ~ 1
 			if(stereoSupport)
@@ -33,10 +29,9 @@ ScarletsMedia.stereoPanner = function(sourceNode){
 
 		// This should be executed by dev to memory leak
 		destroy:function(){
-			gain.disconnect();
 			output.disconnect();
 			pannerNode.disconnect();
-			this.gain = gain = this.node = output = pannerNode = null;
+			this.node = output = pannerNode = null;
 		}
 	};
 };

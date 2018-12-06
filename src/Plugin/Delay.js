@@ -1,32 +1,30 @@
-ScarletsMedia.vibrato = function(sourceNode){
+ScarletsMedia.delay = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
+	var mix = 0;
 
 	var dryGainNode = context.createGain();
 	var wetGainNode = context.createGain();
-	var mix = 0;
-
-	var vibratoGainNode = audioContext.createGain();
-	vibratoGainNode.gain.value = 100;
-	vibratoGainNode.connect(sourceNode.detune);
+	var feedbackGainNode = context.createGain();
+	var delayNode = context.createDelay();
 
 	sourceNode.connect(dryGainNode);
 	dryGainNode.connect(output);
 
-	var lfoNode = audioContext.createOscillator();
-	lfoNode.connect(vibratoGainNode);
-	lfoNode.start(0);
+	delayNode.connect(feedbackGainNode);
+	feedbackGainNode.connect(delayNode);
 
-	sourceNode.connect(vibratoGainNode);
-	tremoloGainNode.connect(wetGainNode);
+	sourceNode.connect(delayNode);
+	delayNode.connect(wetGainNode);
+	
 	wetGainNode.connect(output);
-
-	return {
+	
+	var ret = {
 		// Connect to output
 		// node.connect(context.destination);
 		node:output,
-		
-		mix:function(value){
+
+		mix:function(value){ // value: 0 ~ 1
 			if(value === undefined) return mix;
 			mix = value;
 			var dry = 1;
@@ -39,9 +37,13 @@ ScarletsMedia.vibrato = function(sourceNode){
 				wet = 1 - ((0.5 - mix) * 2);
 			wetGainNode.gain.value = wet;
 		},
-		speed:function(value){
-			if(value === undefined) return denormalize(lfoNode.frequency.value, 0, 20);
-			lfoNode.frequency.value = normalize(value, 0, 20);
+		time:function(value){ // value: 0 ~ 180
+			if(value === undefined) return ;
+			delayNode.delayTime.value = value;
+		},
+		feedback:function(value){ // value: 0 ~ 1
+			if(value === undefined) return ;
+			feedbackGainNode.gain.value = value;
 		},
 
 		// This should be executed by dev to memory leak
@@ -50,4 +52,10 @@ ScarletsMedia.vibrato = function(sourceNode){
 			this.node = output = null;
 		}
 	};
+
+	ret.mix(0.5);
+	ret.time(0.3);
+	ret.feedback(0.5);
+
+	return ret;
 };

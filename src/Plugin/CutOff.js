@@ -13,6 +13,7 @@ ScarletsMedia.cutOff = function(sourceNode, passType){ // passType: 'lowpass' ||
 		// Connect to output
 		// node.connect(context.destination);
 		node:output,
+		
 		frequency: function(value){
 			if(value === undefined)
 				return filterNode.frequency.value;
@@ -26,9 +27,8 @@ ScarletsMedia.cutOff = function(sourceNode, passType){ // passType: 'lowpass' ||
 
 		// This should be executed by dev to memory leak
 		destroy:function(){
-			gain.disconnect();
 			output.disconnect();
-			this.gain = gain = this.node = output = null;
+			this.node = output = null;
 		}
 	};
 };

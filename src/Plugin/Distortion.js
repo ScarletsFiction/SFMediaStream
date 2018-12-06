@@ -1,6 +1,7 @@
 ScarletsMedia.distortion = function(sourceNode){
 	var context = this.audioContext;
 	var deg = Math.PI / 180;
+	
 	var gain = context.createGain();
 	sourceNode.connect(gain);
 	gain.gain.value = 0.5;

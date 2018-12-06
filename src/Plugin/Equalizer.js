@@ -21,11 +21,11 @@ ScarletsMedia.equalizer = function(sourceNode, frequencies){
 	}
 
 	return {
-		equalizer:equalizer,
-
 		// Connect to output
 		// node.connect(context.destination);
 		node:output,
+		
+		equalizer:equalizer,
 
 		// This should be executed by dev to memory leak
 		destroy:function(){
