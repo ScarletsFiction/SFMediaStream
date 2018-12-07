@@ -6,18 +6,26 @@ ScarletsMedia.equalizer = function(sourceNode, frequencies){
 	var output = context.createGain(); // Combine all effect
 
 	for (var i = 0; i < freq.length; i++) {
-        var filter = context.createBiquadFilter();
-        filter.gain.value = 0.0;
+        var filter = context.createBiquadFilter(); // Frequency pass
+		var gain = context.createGain(); // Gain control
         filter.Q.value = 1.0;
         filter.frequency.value = freq[i];
 
-        if(i === 0) filter.type = 'lowshelf';
-        else if(i === lastIndex) filter.type = 'peaking';
-        else filter.type = 'highshelf';
+        if(i === 0) filter.type = 'lowpass';
+        else if(i === lastIndex) filter.type = 'highpass';
+        else {
+        	filter.type = 'bandpass';
+
+        	var width = (freq.length - 3);
+        	if(width <= 1) width = 1.1;
+
+        	filter.Q.value = (4 - 4 / width).toFixed(2);
+        }
 
     	sourceNode.connect(filter);
-    	filter.connect(output);
-        equalizer[freq[i]] = filter;
+    	filter.connect(gain);
+    	gain.connect(output);
+        equalizer[freq[i]] = [gain, filter];
 	}
 
 	return {
@@ -25,13 +33,18 @@ ScarletsMedia.equalizer = function(sourceNode, frequencies){
 		// node.connect(context.destination);
 		node:output,
 		
-		equalizer:equalizer,
+		frequency:function(frequency, gain){ // value: 0 ~ 2
+			if(gain === undefined) return equalizer[frequency][0].gain.value;
+			equalizer[frequency][0].gain.value = gain;
+		},
 
-		// This should be executed by dev to memory leak
+		// This should be executed by dev to clear memory
 		destroy:function(){
 			for (var i = 0; i < freq.length; i++) {
-	    		equalizer[freq[i]].disconnect();
+	    		equalizer[freq[i]][0].disconnect(); // gain
+	    		equalizer[freq[i]][1].disconnect(); // filter
 			}
+			equalizer.splice(0);
 
 			output.disconnect();
 			this.equalizer = equalizer = this.node = output = null;
