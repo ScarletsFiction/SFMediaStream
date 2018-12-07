@@ -11,6 +11,7 @@ ScarletsMedia.distortion = function(sourceNode){
 
 	return {
 		set:function(amount){ // amount: 0 ~ 1
+			amount = amount * 10;
 		    var curve = new Float32Array(context.sampleRate);
 		    var temp = 2 / context.sampleRate;
 
@@ -21,7 +22,7 @@ ScarletsMedia.distortion = function(sourceNode){
 		    	curve[i] = (3 + amount) * x * deg / (Math.PI + amount * Math.abs(x));
 		    }
 
-		    output.curve = curve;
+		    waveShaperNode.curve = curve;
 		},
 
 		// Connect to output
