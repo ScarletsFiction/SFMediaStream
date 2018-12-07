@@ -4,24 +4,24 @@ ScarletsMedia.vibrato = function(sourceNode){
 	var input = sourceNode === undefined ? context.createGain() : null;
 	if(input) sourceNode = input;
 
-	var dryGainNode = context.createGain();
-	var wetGainNode = context.createGain();
-	var mix = 0;
+	console.error("The vibrato effect still need some maintenance");
 
-	var vibratoGainNode = audioContext.createGain();
-	vibratoGainNode.gain.value = 100;
-	vibratoGainNode.connect(sourceNode.detune);
+    var filter = context.createBiquadFilter();
+	filter.type = 'peaking';
+	filter.gain.value = 1;
+	filter.Q.value = 1
+	filter.connect(output);
 
-	sourceNode.connect(dryGainNode);
-	dryGainNode.connect(output);
+    sourceNode.connect(filter);
 
-	var lfoNode = audioContext.createOscillator();
+	var vibratoGainNode = context.createGain();
+	vibratoGainNode.gain.value = 30;
+	vibratoGainNode.connect(filter.detune);
+
+	var lfoNode = context.createOscillator();
 	lfoNode.connect(vibratoGainNode);
+	lfoNode.frequency.value = 5;
 	lfoNode.start(0);
-
-	sourceNode.connect(vibratoGainNode);
-	tremoloGainNode.connect(wetGainNode);
-	wetGainNode.connect(output);
 
 	return {
 		// Connect to output
@@ -29,19 +29,6 @@ ScarletsMedia.vibrato = function(sourceNode){
 		output:output,
 		input:input,
 		
-		mix:function(value){
-			if(value === undefined) return mix;
-			mix = value;
-			var dry = 1;
-			if (mix > 0.5)
-				dry = 1 - ((mix - 0.5) * 2);
-			dryGainNode.gain.value = dry;
-
-			var wet = 1;
-			if (mix < 0.5)
-				wet = 1 - ((0.5 - mix) * 2);
-			wetGainNode.gain.value = wet;
-		},
 		speed:function(value){
 			if(value === undefined) return denormalize(lfoNode.frequency.value, 0, 20);
 			lfoNode.frequency.value = normalize(value, 0, 20);
@@ -49,8 +36,15 @@ ScarletsMedia.vibrato = function(sourceNode){
 
 		// This should be executed to clean memory
 		destroy:function(){
+			if(input) input.disconnect();
 			output.disconnect();
-			this.node = output = null;
+			lfoNode.stop();
+			lfoNode.disconnect();
+			
+			for(var key in this){
+				delete this[key];
+			}
+			output = null;
 		}
 	};
 };

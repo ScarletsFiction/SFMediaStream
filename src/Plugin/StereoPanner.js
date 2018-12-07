@@ -32,9 +32,14 @@ ScarletsMedia.stereoPanner = function(sourceNode){
 
 		// This should be executed to clean memory
 		destroy:function(){
+			if(input) input.disconnect();
 			output.disconnect();
 			pannerNode.disconnect();
-			this.node = output = pannerNode = null;
+			
+			for(var key in this){
+				delete this[key];
+			}
+			output = pannerNode = null;
 		}
 	};
 };

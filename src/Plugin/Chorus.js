@@ -89,13 +89,18 @@ ScarletsMedia.chorus = function(sourceNode){
 
 		// This should be executed to clean memory
 		destroy:function(){
+			if(input) input.disconnect();
 			output.disconnect();
 			lfo.stop(0);
 			lfo.disconnect();
+			
 	    	for (var i = 0; i < channel.length; i++) {
 		    	channel[i].stream.disconnect();
 	    	}
-			this.node = output = null;
+			for(var key in this){
+				delete this[key];
+			}
+			output = null;
 		}
 	};
 

@@ -1,4 +1,4 @@
-ScarletsMedia.cutOff = function(sourceNode, passType){ // passType: 'lowpass' || 'highpass'
+ScarletsMedia.cutOff = function(passType, sourceNode){ // passType: 'lowpass' | 'bandpass' | 'highpass'
 	var context = this.audioContext;
 	var output = context.createGain();
 	var input = sourceNode === undefined ? context.createGain() : null;
@@ -30,8 +30,14 @@ ScarletsMedia.cutOff = function(sourceNode, passType){ // passType: 'lowpass' ||
 
 		// This should be executed to clean memory
 		destroy:function(){
+			if(input) input.disconnect();
+			filterNode.disconnect();
 			output.disconnect();
-			this.node = output = null;
+			
+			for(var key in this){
+				delete this[key];
+			}
+			output = null;
 		}
 	};
 };

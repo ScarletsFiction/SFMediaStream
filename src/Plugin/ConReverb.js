@@ -50,10 +50,15 @@ ScarletsMedia.conReverb = function(sourceNode){
 
 		// This should be executed to clean memory
 		destroy:function(){
+			if(input) input.disconnect();
 			dryGainNode.disconnect();
 			output.disconnect();
 			reverbNode.disconnect();
-			this.node = output = null;
+			
+			for(var key in this){
+				delete this[key];
+			}
+			output = null;
 		}
 	};
 };

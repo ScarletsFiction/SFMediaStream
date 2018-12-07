@@ -32,9 +32,17 @@ ScarletsMedia.noise = function(){
 		destroy:function(){
 			src.loop = false;
 			src.buffer = null;
+    		src.stop(0);
+			src.disconnect();
 			src = null;
+
+			if(input) input.disconnect();
 			output.disconnect();
-			this.node = output = null;
+			
+			for(var key in this){
+				delete this[key];
+			}
+			output = null;
 		}
 	};
 };

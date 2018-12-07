@@ -10,20 +10,19 @@ ScarletsMedia.harmonizer = function(sourceNode){
     var filters2 = [];
     var gains = [];
 
-    for (var i = 0; i < bands; ++i) {
+    for (var i = 0; i < bands; i++) {
       filters1[i] = context.createBiquadFilter();
       filters1[i].type = 'bandpass';
       filters2[i] = context.createBiquadFilter();
       filters2[i].type = 'bandpass';
-      sourceNode.to(filters1[i]);
+      sourceNode.connect(filters1[i]);
 
       gains[i] = context.createGain();
-      gains[i].to(output);
-      filters1[i].to(filters2[i]).to(gains[i]);
+      gains[i].connect(output);
+      filters1[i].connect(filters2[i]).connect(gains[i]);
     }
 
     output.gain.value = 35.0;
-    output.to(output);
 
 	var ret = {
 		// Connect to output
@@ -32,33 +31,41 @@ ScarletsMedia.harmonizer = function(sourceNode){
 		input:input,
 		
 		// Change frequency of filters
-	    pitch: function (value, time, rampType) {
+	    pitch: function (value) {
 	    	var f0 = ScarletsMedia.convert.midiToFreq(value);
 	    	for (var i = 0; i < bands; i++) {
-	    		filters1[i].frequency.set(f0, time, rampType);
-	    		filters2[i].frequency.set(f0, time, rampType);
+	    		filters1[i].frequency.value = f0;
+	    		filters2[i].frequency.value = f0;
 	    	}
 	    },
 
-	    slope: function (value, time, rampType) {
+	    slope: function (value) {
 	    	for (var i = 0; i < bands; i++) {
-	    		gains[i].gain.set(1.0 + Math.sin(Math.PI + (Math.PI/2 * (value + i / bands))), time, rampType);
+	    		gains[i].gain.value = 1.0 + Math.sin(Math.PI + (Math.PI/2 * (value + i / bands)));
 	    	}
 	    },
 
-	    width: function (value, time, rampType) {
+	    width: function (value) {
 	    	for (var i = 1; i < bands; i++) {
 	    		var q = 2 + 90 * Math.pow((1 - i / bands), value);
-	    		filters1[i].Q.set(q, time, rampType);
-	    		filters2[i].Q.set(q, time, rampType);
+	    		filters1[i].Q.value = q;
+	    		filters2[i].Q.value = q;
 	    	}
 	    },
 
 		// This should be executed to clean memory
 		destroy:function(){
-			gain.disconnect();
+			if(input) input.disconnect();
 			output.disconnect();
-			this.gain = gain = this.node = output = null;
+
+		    for (var i = 0; i < bands; i++) {
+		        filters1[i].disconnect();
+		  	}
+
+			for(var key in this){
+				delete this[key];
+			}
+			output = null;
 		}
 	};
 

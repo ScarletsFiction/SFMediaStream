@@ -6,7 +6,6 @@ ScarletsMedia.tremolo = function(sourceNode){
 
 	var dryGainNode = context.createGain();
 	var wetGainNode = context.createGain();
-	var mix = 0;
 
 	var tremoloGainNode = context.createGain();
 	tremoloGainNode.gain.value = 0;
@@ -33,18 +32,10 @@ ScarletsMedia.tremolo = function(sourceNode){
 		output:output,
 		input:input,
 
-		mix:function(value){
-			if(value === undefined) return mix;
-			mix = value;
-			var dry = 1;
-			if (mix > 0.5)
-				dry = 1 - ((mix - 0.5) * 2);
-			dryGainNode.gain.value = dry;
-
-			var wet = 1;
-			if (mix < 0.5)
-				wet = 1 - ((0.5 - mix) * 2);
-			wetGainNode.gain.value = wet;
+		mix: function(value){ // value: 0 ~ 1
+			if(value === undefined) return wetGainNode.gain.value;
+			dryGainNode.gain.value = 1 - value;
+			wetGainNode.gain.value = value;
 		},
 		speed:function(value){
 			if(value === undefined) return denormalize(lfoNode.frequency.value, 0, 20);
@@ -52,14 +43,20 @@ ScarletsMedia.tremolo = function(sourceNode){
 		},
 		depth:function(value){
 			if(value === undefined) return 1 - this.shaperNode.curve[0];
-			this.shaperNode.curve = new Float32Array([1 - value, 1]);
+			shaperNode.curve = new Float32Array([1 - value, 1]);
 		},
 
 		// This should be executed to clean memory
 		destroy:function(){
-			gain.disconnect();
+			if(input) input.disconnect();
 			output.disconnect();
-			this.node = output = null;
+			dryGainNode.disconnect();
+			tremoloGainNode.disconnect();
+			
+			for(var key in this){
+				delete this[key];
+			}
+			output = null;
 		}
 	};
 

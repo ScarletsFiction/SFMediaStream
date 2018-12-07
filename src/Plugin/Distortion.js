@@ -32,6 +32,7 @@ ScarletsMedia.distortion = function(sourceNode){
 
 		// This should be executed to clean memory
 		destroy:function(){
+			if(input) input.disconnect();
 			waveShaperNode.disconnect();
 			output.disconnect();
 

@@ -54,8 +54,13 @@ ScarletsMedia.equalizer = function(frequencies, sourceNode){
 			}
 			equalizer.splice(0);
 
+			if(input) input.disconnect();
 			output.disconnect();
-			this.equalizer = equalizer = this.node = output = null;
+			
+			for(var key in this){
+				delete this[key];
+			}
+			equalizer = output = null;
 		}
 	};
 };
