@@ -1,6 +1,6 @@
 ScarletsMedia.distortion = function(sourceNode){
 	var context = this.audioContext;
-	var deg = Math.PI / 180;
+	var deg = 57 * Math.PI / 180;
 	
 	var gain = context.createGain();
 	sourceNode.connect(gain);
@@ -12,11 +12,13 @@ ScarletsMedia.distortion = function(sourceNode){
 	return {
 		set:function(amount){ // amount: 0 ~ 1
 		    var curve = new Float32Array(context.sampleRate);
+		    var temp = 2 / context.sampleRate;
+		    
 		    for (var i = 0 ; i < context.sampleRate; i++) {
-		    	var x = i * 2 / context.sampleRate - 1;
+		    	var x = i * temp - 1;
 
 		    	// http://kevincennis.github.io/transfergraph/
-		    	curve[i] = (3 + amount) * x * 20 * deg / (Math.PI + amount * Math.abs(x));
+		    	curve[i] = (3 + amount) * x * deg / (Math.PI + amount * Math.abs(x));
 		    }
 
 		    dist.curve = curve;
@@ -27,7 +29,7 @@ ScarletsMedia.distortion = function(sourceNode){
 		node:output,
 		gain:gain.gain,
 
-		// This should be executed by dev to memory leak
+		// This should be executed by dev to clean memory
 		destroy:function(){
 			gain.disconnect();
 			output.disconnect();
