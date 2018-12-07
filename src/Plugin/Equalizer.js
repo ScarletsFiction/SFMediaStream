@@ -1,9 +1,13 @@
-ScarletsMedia.equalizer = function(sourceNode, frequencies){
+ScarletsMedia.equalizer = function(frequencies, sourceNode){
 	var freq = frequencies || [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 	var context = this.audioContext;
+	
+	var output = context.createGain(); // Combine all effect
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
+
 	var equalizer = {};
 	var lastIndex = freq.length - 1;
-	var output = context.createGain(); // Combine all effect
 
 	// Calculate bandpass width
     var width = (freq.length - 3);
@@ -24,7 +28,8 @@ ScarletsMedia.equalizer = function(sourceNode, frequencies){
         	filter.Q.value = width;
         }
 
-    	sourceNode.connect(filter);
+		sourceNode.connect(filter);
+
     	filter.connect(gain);
     	gain.connect(output);
         equalizer[freq[i]] = [gain, filter];
@@ -32,15 +37,16 @@ ScarletsMedia.equalizer = function(sourceNode, frequencies){
 
 	return {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 		
 		frequency:function(frequency, gain){ // value: 0 ~ 2
 			if(gain === undefined) return equalizer[frequency][0].gain.value;
 			equalizer[frequency][0].gain.value = gain;
 		},
 
-		// This should be executed by dev to clear memory
+		// This should be executed to clean memory
 		destroy:function(){
 			for (var i = 0; i < freq.length; i++) {
 	    		equalizer[freq[i]][0].disconnect(); // gain

@@ -1,6 +1,8 @@
 ScarletsMedia.flanger = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 
 	var inputFeedbackNode = context.createGain();
 	var wetGainNode = context.createGain();
@@ -32,8 +34,9 @@ ScarletsMedia.flanger = function(sourceNode){
 	
 	var ret = {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 
 		time:function(value){ // value: 0 ~ 1
 			if(value === undefined) return denormalize(delayNode.delayTime.value, 0.001, 0.02);
@@ -64,7 +67,7 @@ ScarletsMedia.flanger = function(sourceNode){
 			wetGainNode.gain.value = wet;
 		},
 
-		// This should be executed by dev to memory leak
+		// This should be executed to clean memory
 		destroy:function(){
 			output.disconnect();
 			this.node = output = null;

@@ -1,13 +1,14 @@
 ScarletsMedia.harmonizer = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
   	var bands = 8;
 
 	// Cascading 2 filters for sharp resonance.
     var filters1 = [];
     var filters2 = [];
     var gains = [];
-    var sum = context.createGain();
 
     for (var i = 0; i < bands; ++i) {
       filters1[i] = context.createBiquadFilter();
@@ -17,19 +18,19 @@ ScarletsMedia.harmonizer = function(sourceNode){
       sourceNode.to(filters1[i]);
 
       gains[i] = context.createGain();
-      gains[i].to(sum);
+      gains[i].to(output);
       filters1[i].to(filters2[i]).to(gains[i]);
     }
 
-    sum.gain.value = 35.0;
-    sum.to(output);
+    output.gain.value = 35.0;
+    output.to(output);
 
 	var ret = {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
-		gain:sum.gain,
-
+		// output.connect(context.destination);
+		output:output,
+		input:input,
+		
 		// Change frequency of filters
 	    pitch: function (value, time, rampType) {
 	    	var f0 = ScarletsMedia.convert.midiToFreq(value);
@@ -53,7 +54,7 @@ ScarletsMedia.harmonizer = function(sourceNode){
 	    	}
 	    },
 
-		// This should be executed by dev to memory leak
+		// This should be executed to clean memory
 		destroy:function(){
 			gain.disconnect();
 			output.disconnect();

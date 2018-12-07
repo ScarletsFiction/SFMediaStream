@@ -1,19 +1,19 @@
 ScarletsMedia.distortion = function(sourceNode){
 	var context = this.audioContext;
+	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 	var deg = 57 * Math.PI / 180;
-	
-	var gain = context.createGain();
-	sourceNode.connect(gain);
-	gain.gain.value = 0.5;
 
-	var output = context.createWaveShaper();
-	gain.connect(output);
+	var waveShaperNode = context.createWaveShaper();
+	waveShaperNode.connect(output);
+	sourceNode.connect(waveShaperNode);
 
 	return {
 		set:function(amount){ // amount: 0 ~ 1
 		    var curve = new Float32Array(context.sampleRate);
 		    var temp = 2 / context.sampleRate;
-		    
+
 		    for (var i = 0 ; i < context.sampleRate; i++) {
 		    	var x = i * temp - 1;
 
@@ -21,19 +21,23 @@ ScarletsMedia.distortion = function(sourceNode){
 		    	curve[i] = (3 + amount) * x * deg / (Math.PI + amount * Math.abs(x));
 		    }
 
-		    dist.curve = curve;
+		    output.curve = curve;
 		},
 
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
-		gain:gain.gain,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 
-		// This should be executed by dev to clean memory
+		// This should be executed to clean memory
 		destroy:function(){
-			gain.disconnect();
+			waveShaperNode.disconnect();
 			output.disconnect();
-			this.gain = gain = this.node = output = null;
+
+			waveShaperNode = output = null;
+			for(var key in this){
+				delete this[key];
+			}
 		}
 	};
 };

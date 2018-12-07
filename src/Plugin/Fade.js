@@ -1,26 +1,29 @@
 ScarletsMedia.fade = function(sourceNode){
 	var context = this.audioContext;
+	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 
-	var fadeNode = context.createGain();
-	fadeNode.gain.value = 0;
-	sourceNode.connect(fadeNode);
+	output.gain.value = 0;
+	sourceNode.connect(output);
 	
 	return {
 		// Connect to output
-		// node.connect(context.destination);
-		node:fadeNode,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 
 		in:function(value, time){ // value: 0~1, time: in seconds
-			fadeNode.gain.cancelScheduledValues(context.currentTime);
+			output.gain.cancelScheduledValues(context.currentTime);
 
-			var remainingTime = (1 - fadeNode.gain.value) * value;
-			fadeNode.gain.setTargetAtTime(1.0, context.currentTime, remainingTime * time);
+			var remainingTime = (1 - output.gain.value) * value;
+			output.gain.setTargetAtTime(1.0, context.currentTime, remainingTime * time);
 		},
 		out:function(value, time, callback){ // value: 0~1, time: in seconds
-			fadeNode.gain.cancelScheduledValues(context.currentTime);
+			output.gain.cancelScheduledValues(context.currentTime);
 
-			var remainingTime = fadeNode.gain.value * value;
-			fadeNode.gain.setTargetAtTime(0.00001, context.currentTime, remainingTime / time);
+			var remainingTime = output.gain.value * value;
+			output.gain.setTargetAtTime(0.00001, context.currentTime, remainingTime / time);
 
 			setTimeout(function(){
 				if(sourceNode.stop) sourceNode.stop(0);
@@ -28,9 +31,9 @@ ScarletsMedia.fade = function(sourceNode){
 			}, time * 1000);
 		},
 
-		// This should be executed by dev to memory leak
+		// This should be executed to clean memory
 		destroy:function(){
-			fadeNode.disconnect();
+			output.disconnect();
 			this.node = output = null;
 		}
 	};

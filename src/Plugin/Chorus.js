@@ -1,6 +1,8 @@
 ScarletsMedia.chorus = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 
 	var dry = context.createGain();
     var wet = context.createGain();
@@ -58,8 +60,9 @@ ScarletsMedia.chorus = function(sourceNode){
 
 	var ret =  {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 
 		rate: function (value, time, rampType) { // value: 0 ~ 1
 	    	value = value * 0.29 + 0.01;
@@ -83,7 +86,7 @@ ScarletsMedia.chorus = function(sourceNode){
 	    	dry.gain.set(value, time, rampType);
 	    },
 
-		// This should be executed by dev to memory leak
+		// This should be executed to clean memory
 		destroy:function(){
 			output.disconnect();
 			lfo.disconnect();

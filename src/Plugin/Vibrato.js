@@ -1,6 +1,8 @@
 ScarletsMedia.vibrato = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 
 	var dryGainNode = context.createGain();
 	var wetGainNode = context.createGain();
@@ -23,8 +25,9 @@ ScarletsMedia.vibrato = function(sourceNode){
 
 	return {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 		
 		mix:function(value){
 			if(value === undefined) return mix;
@@ -44,7 +47,7 @@ ScarletsMedia.vibrato = function(sourceNode){
 			lfoNode.frequency.value = normalize(value, 0, 20);
 		},
 
-		// This should be executed by dev to memory leak
+		// This should be executed to clean memory
 		destroy:function(){
 			output.disconnect();
 			this.node = output = null;

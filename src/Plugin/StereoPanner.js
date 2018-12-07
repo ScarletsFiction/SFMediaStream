@@ -1,6 +1,8 @@
 ScarletsMedia.stereoPanner = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 
 	var stereoSupport = false;
 	if(context.createStereoPanner){
@@ -18,8 +20,9 @@ ScarletsMedia.stereoPanner = function(sourceNode){
 
 	return {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 
 		set:function(pan){ // pan: -1 ~ 1
 			if(stereoSupport)
@@ -27,7 +30,7 @@ ScarletsMedia.stereoPanner = function(sourceNode){
 			else pannerNode.setPosition(pan, 0, 1 - Math.abs(pan));
 		},
 
-		// This should be executed by dev to memory leak
+		// This should be executed to clean memory
 		destroy:function(){
 			output.disconnect();
 			pannerNode.disconnect();

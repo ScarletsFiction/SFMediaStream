@@ -1,6 +1,8 @@
 ScarletsMedia.cutOff = function(sourceNode, passType){ // passType: 'lowpass' || 'highpass'
 	var context = this.audioContext;
 	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 
 	var filterNode = context.createBiquadFilter();
 	filterNode.type = passType || 'lowpass';
@@ -11,8 +13,9 @@ ScarletsMedia.cutOff = function(sourceNode, passType){ // passType: 'lowpass' ||
 	
 	return {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 		
 		frequency: function(value){
 			if(value === undefined)
@@ -25,7 +28,7 @@ ScarletsMedia.cutOff = function(sourceNode, passType){ // passType: 'lowpass' ||
 			filterNode.Q.value = value;
 		},
 
-		// This should be executed by dev to memory leak
+		// This should be executed to clean memory
 		destroy:function(){
 			output.disconnect();
 			this.node = output = null;

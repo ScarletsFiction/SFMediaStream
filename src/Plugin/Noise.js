@@ -1,6 +1,8 @@
 ScarletsMedia.noise = function(){
 	var context = this.audioContext;
 	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 
 	var length = Math.floor(context.sampleRate * 9.73);
 	var noiseFloat32 = new Float32Array(length);
@@ -22,10 +24,11 @@ ScarletsMedia.noise = function(){
 	
 	return {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 
-		// This should be executed by dev to memory leak
+		// This should be executed to clean memory
 		destroy:function(){
 			src.loop = false;
 			src.buffer = null;

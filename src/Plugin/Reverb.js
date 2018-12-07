@@ -1,11 +1,14 @@
 ScarletsMedia.reverb = function(sourceNode){
 	var context = this.audioContext;
+	
 	var output = context.createGain();
+	var input = sourceNode === undefined ? context.createGain() : null;
+	if(input) sourceNode = input;
 
 	var reverbNode = context.createConvolver();
 	var wetGainNode = context.createGain();
 	var dryGainNode = context.createGain();
-
+	
 	sourceNode.connect(dryGainNode);
 	dryGainNode.connect(output);
 	wetGainNode.connect(output);
@@ -38,8 +41,9 @@ ScarletsMedia.reverb = function(sourceNode){
 
 	return {
 		// Connect to output
-		// node.connect(context.destination);
-		node:output,
+		// output.connect(context.destination);
+		output:output,
+		input:input,
 
 		mix: function(value){ // value: 0 ~ 1
 			if(value === undefined) return wetGainNode.gain.value;
@@ -65,7 +69,7 @@ ScarletsMedia.reverb = function(sourceNode){
 			rebuildImpulse();
 		},
 
-		// This should be executed by dev to clean memory
+		// This should be executed to clean memory
 		destroy:function(){
 			dryGainNode.disconnect();
 			output.disconnect();
