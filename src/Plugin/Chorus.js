@@ -8,7 +8,8 @@ ScarletsMedia.chorus = function(sourceNode){
     var wet = context.createGain();
     var splitter = context.createChannelSplitter(2);
     var merger = context.createChannelMerger(2);
-    sourceNode.to(splitter, dry);
+    sourceNode.connect(splitter);
+    sourceNode.connect(dry);
 
     var channel = [{/* left */}, {/* right */}];
 
@@ -25,27 +26,28 @@ ScarletsMedia.chorus = function(sourceNode){
 
     	// Connection
 	    splitter.connect(c.stream, i, 0);
-	    c.stream.to(c.delayVibrato);
-	    c.stream.to(c.delayFixed);
-	    c.delayVibrato.to(c.feedforward);
+	    c.stream.connect(c.delayVibrato);
+	    c.stream.connect(c.delayFixed);
+	    c.delayVibrato.connect(c.feedforward);
 	    c.delayVibrato.connect(merger, 0, i);
-	    c.delayFixed.to(c.feedback);
-	    c.feedback.to(c.stream);
+	    c.delayFixed.connect(c.feedback);
+	    c.feedback.connect(c.stream);
 	    c.blend.connect(merger, 0, i);
     }
 
     // Output
-    merger.to(wet);
-    dry.to(output);
-    wet.to(output);
+    merger.connect(wet);
+    dry.connect(output);
+    wet.connect(output);
 
     // LFO modulation
     var lfo = context.createOscillator();
     var LDepth = context.createGain();
     var RDepth = context.createGain();
-    lfo.to(LDepth, RDepth);
-    LDepth.to(channel[0].delayVibrato.delayTime);
-    RDepth.to(channel[1].delayVibrato.delayTime);
+    lfo.connect(LDepth);
+    lfo.connect(RDepth);
+    LDepth.connect(channel[0].delayVibrato.delayTime);
+    RDepth.connect(channel[1].delayVibrato.delayTime);
     lfo.start(0);
 
     // Settings
@@ -64,31 +66,31 @@ ScarletsMedia.chorus = function(sourceNode){
 		output:output,
 		input:input,
 
-		rate: function (value, time, rampType) { // value: 0 ~ 1
+		rate: function (value) { // value: 0 ~ 1
 	    	value = value * 0.29 + 0.01;
-	    	lfo.frequency.set(value, time, rampType);
+	    	lfo.frequency.value = value;
 	    },
 
-	    intensity: function (value, time, rampType) { // value: 0 ~ 1
+	    intensity: function (value) { // value: 0 ~ 1
 	    	var blend = 1.0 - (value * 0.2929);
 	    	var feedforward = value * 0.2929 + 0.7071;
 	    	var feedback = value * 0.7071;
 
 	    	for (var i = 0; i < channel.length; i++) {
-		    	channel[i].blend.gain.set(blend, time, rampType);
-		    	channel[i].feedforward.gain.set(feedforward, time, rampType);
-		    	channel[i].feedback.gain.set(feedback, time, rampType);
+		    	channel[i].blend.gain.value = blend;
+		    	channel[i].feedforward.gain.value = feedforward;
+		    	channel[i].feedback.gain.value = feedback;
 	    	}
 	    },
 
-	    mix: function (value, time, rampType) {
-	    	dry.gain.set(1.0 - value, time, rampType);
-	    	dry.gain.set(value, time, rampType);
+	    mix: function (value) {
+	    	dry.gain.value = value;
 	    },
 
 		// This should be executed to clean memory
 		destroy:function(){
 			output.disconnect();
+			lfo.stop(0);
 			lfo.disconnect();
 	    	for (var i = 0; i < channel.length; i++) {
 		    	channel[i].stream.disconnect();
