@@ -20,7 +20,7 @@ window.ScarletsMediaPlayer = function(element){
 
 	// Reference element property
 	for (var i = 0; i < propertyLinker.length; i++) {
-		objectPropertyLinker(self, element, propertyLinker[i]);
+		ScarletsMedia.extra.objectPropertyLinker(self, element, propertyLinker[i]);
 	}
 
 	self.preload = true;
@@ -51,7 +51,7 @@ window.ScarletsMediaPlayer = function(element){
 		if(self.audioFadeEffect){
 			element.volume = 0;
 			element.play();
-			fadeNumber(0, volume, 0.02, 400, function(num){
+			ScarletsMedia.extra.fadeNumber(0, volume, 0.02, 400, function(num){
 				element.volume = num;
 			}, callback);
 			return;
@@ -66,7 +66,7 @@ window.ScarletsMediaPlayer = function(element){
 			return;
 		}
 		if(self.audioFadeEffect){
-			fadeNumber(volume, 0, -0.02, 400, function(num){
+			ScarletsMedia.extra.fadeNumber(volume, 0, -0.02, 400, function(num){
 				element.volume = num;
 			}, function(){
 				element.pause();

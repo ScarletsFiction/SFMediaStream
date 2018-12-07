@@ -21,7 +21,7 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 	scope.mimeType = null;
 
 	// Use webAudio for mobile, and HTML5 audio for computer
-	scope.webAudio = isMobile()?true:false; // Mobile browser have security on HTML element
+	scope.webAudio = ScarletsMedia.convert.isMobile()?true:false; // Mobile browser have security on HTML element
 	scope.audioContext = ScarletsMedia.audioContext;
 	// Avoid webAudio for computer browser because memory usage
 

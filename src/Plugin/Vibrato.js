@@ -30,8 +30,8 @@ ScarletsMedia.vibrato = function(sourceNode){
 		input:input,
 		
 		speed:function(value){
-			if(value === undefined) return denormalize(lfoNode.frequency.value, 0, 20);
-			lfoNode.frequency.value = normalize(value, 0, 20);
+			if(value === undefined) return ScarletsMedia.extra.denormalize(lfoNode.frequency.value, 0, 20);
+			lfoNode.frequency.value = ScarletsMedia.extra.normalize(value, 0, 20);
 		},
 
 		// This should be executed to clean memory

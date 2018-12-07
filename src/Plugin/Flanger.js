@@ -44,20 +44,20 @@ ScarletsMedia.flanger = function(sourceNode){
 			wetGainNode.gain.value = value;
 		},
 		time:function(value){ // value: 0 ~ 1
-			if(value === undefined) return denormalize(delayNode.delayTime.value, 0.001, 0.02);
-			delayNode.delayTime.value = normalize(value, 0.001, 0.02);
+			if(value === undefined) return ScarletsMedia.extra.denormalize(delayNode.delayTime.value, 0.001, 0.02);
+			delayNode.delayTime.value = ScarletsMedia.extra.normalize(value, 0.001, 0.02);
 		},
 		speed:function(value){ // value: 0 ~ 1
-			if(value === undefined) return denormalize(delayNode.delayTime.value, 0.5, 5);
-			oscillatorNode.frequency.value = normalize(value, 0.5, 5);
+			if(value === undefined) return ScarletsMedia.extra.denormalize(delayNode.delayTime.value, 0.5, 5);
+			oscillatorNode.frequency.value = ScarletsMedia.extra.normalize(value, 0.5, 5);
 		},
 		depth:function(value){ // value: 0 ~ 1
-			if(value === undefined) return denormalize(delayNode.delayTime.value, 0.0005, 0.005);
-			gainNode.gain.value = normalize(value, 0.0005, 0.005);
+			if(value === undefined) return ScarletsMedia.extra.denormalize(delayNode.delayTime.value, 0.0005, 0.005);
+			gainNode.gain.value = ScarletsMedia.extra.normalize(value, 0.0005, 0.005);
 		},
 		feedback:function(value){ // value: 0 ~ 1
-			if(value === undefined) return denormalize(delayNode.delayTime.value, 0, 0.8);
-			feedbackNode.gain.value = normalize(value, 0, 0.8);
+			if(value === undefined) return ScarletsMedia.extra.denormalize(delayNode.delayTime.value, 0, 0.8);
+			feedbackNode.gain.value = ScarletsMedia.extra.normalize(value, 0, 0.8);
 		},
 
 		// This should be executed to clean memory
