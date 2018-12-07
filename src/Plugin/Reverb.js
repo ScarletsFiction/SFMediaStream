@@ -10,9 +10,8 @@ ScarletsMedia.reverb = function(sourceNode){
 	dryGainNode.connect(output);
 	wetGainNode.connect(output);
 
-	var mix = 0.5,
-		time = 0.01,
-		decay = 0.01,
+	var time = 1,
+		decay = 0.1,
 		reverse = false;
 
 	function rebuildImpulse(){
@@ -35,34 +34,28 @@ ScarletsMedia.reverb = function(sourceNode){
 
 		reverbNode.buffer = impulse;
 	}
-	
+	rebuildImpulse();
+
 	return {
 		// Connect to output
 		// node.connect(context.destination);
 		node:output,
 
 		mix: function(value){ // value: 0 ~ 1
-			if(value === undefined) return mix;
-			var dry = 1;
-			if (mix > 0.5)
-				dry = 1 - ((mix - 0.5) * 2);
-			dryGainNode.gain.value = dry;
-
-			var wet = 1;
-			if (mix < 0.5)
-				wet = 1 - ((0.5 - mix) * 2);
-			wetGainNode.gain.value = wet;
+			if(value === undefined) return wetGainNode.gain.value;
+			dryGainNode.gain.value = 1 - value;
+			wetGainNode.gain.value = value;
 		},
 
-		time: function(value){ // value: 0 ~ 1
-			if(value === undefined) return denormalize(time, 0.001, 10);
-			time = normalize(value, 0.001, 10);
+		time: function(value){ // value: 0 ~ 3
+			if(value === undefined) return time;
+			time = value;
 			rebuildImpulse();
 		},
 
-		decay: function(value){// value: 0 ~ 1
-			if(value === undefined) return denormalize(decay, 0.001, 10);
-			decay = normalize(value, 0.001, 10);
+		decay: function(value){// value: 0 ~ 3
+			if(value === undefined) return decay;
+			decay = value;
 			rebuildImpulse();
 		},
 
@@ -72,7 +65,7 @@ ScarletsMedia.reverb = function(sourceNode){
 			rebuildImpulse();
 		},
 
-		// This should be executed by dev to memory leak
+		// This should be executed by dev to clean memory
 		destroy:function(){
 			dryGainNode.disconnect();
 			output.disconnect();
