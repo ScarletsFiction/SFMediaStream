@@ -5,6 +5,12 @@ ScarletsMedia.equalizer = function(sourceNode, frequencies){
 	var lastIndex = freq.length - 1;
 	var output = context.createGain(); // Combine all effect
 
+	// Calculate bandpass width
+    var width = (freq.length - 3);
+    if(width <= 1) width = 1.1;
+
+    width = (4 - 4 / width).toFixed(2);
+
 	for (var i = 0; i < freq.length; i++) {
         var filter = context.createBiquadFilter(); // Frequency pass
 		var gain = context.createGain(); // Gain control
@@ -15,11 +21,7 @@ ScarletsMedia.equalizer = function(sourceNode, frequencies){
         else if(i === lastIndex) filter.type = 'highpass';
         else {
         	filter.type = 'bandpass';
-
-        	var width = (freq.length - 3);
-        	if(width <= 1) width = 1.1;
-
-        	filter.Q.value = (4 - 4 / width).toFixed(2);
+        	filter.Q.value = width;
         }
 
     	sourceNode.connect(filter);
