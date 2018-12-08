@@ -105,7 +105,6 @@ var audioStreamer = new ScarletsAudioBufferStreamer(bufferStorage, chunksDuratio
 | bufferSkip | Set this if you want to skip some seconds |
 | mimeType | Return mimeType of current streamed media |
 | webAudio | Set to false for using HTML5 media element |
-| audioContext | Return `audioContext` that being used |
 
 ```js
 // Example for accessing the properties
@@ -185,6 +184,9 @@ var mediaPlayer = new ScarletsMediaPlayer(document.querySelector('audio'));
 | played | Returns a TimeRanges object representing the played parts of the audio/video |
 | seekable | Returns a TimeRanges object representing the seekable parts of the audio/video |
 | seeking | Returns whether the user is currently seeking in the audio/video |
+| audioOutput | Return `audioContext` from media source |
+| videoOutput | Return `videoContext` from media source |
+The videoContext still in [experimental mode](https://github.com/bbc/VideoContext) and haven't been implemented.
 
 ```js
 // Example for accessing the properties
@@ -307,10 +309,69 @@ mediaPlayer.once('abort', function(e){
 mediaPlayer.poster = 'url.png';
 ```
 
-#### Audio Properties
+#### Properties
 ###### audioFadeEffect
+Enable fade effect when playing or pausing the sound
 ```js
 mediaPlayer.audioFadeEffect = true;
+```
+
+###### audioOutput
+Can be used to connect the media to other effect or plugin like equalizer
+```js
+// Create equalizer and pass audio output as equalizer input
+var equalizer = ScarletsMedia.equalizer(null, mediaPlayer.audioOutput);
+
+// Connect to final destination
+equalizer.output.connect(ScarletsMedia.audioContext.destination);
+```
+
+#### Audio Effect
+This feature can be used on every media if you have the media source node as the input. And make sure every node is connected to `AudioContext.destination` or it will not playable.
+
+The plugins have a function to destroy node connection that aren't being used. So don't forget to destroy your unused effect to clean unused memory.
+```js
+effect.destroy();
+```
+
+##### Available Plugin
+| Effect  | Details |
+| --- | --- |
+| Chorus | An effect to make a single voice like multiple voices |
+| ConReverb | An reverb effect that simulates from other audio source |
+| CutOff | An cutoff filter that have adjustable width |
+| Delay | An effect that play the audio back after a period of time |
+| Distortion | It's.. like.. distortion.. |
+| DubDelay | Delay with feedback saturation and time/pitch modulation |
+| Equalizer | Adjustable frequency pass filter |
+| Fade | Volume fade in and fade out effect |
+| Flanger | An audio effect by mixing two identical signals together with one signal who get delayed |
+| Harmonizer | An pitch shift effect which like playing an harmony |
+| Noise | Noise generator like a radio |
+| PingPongDelay | Stereo delay effect that alternates each delay between the left and right channels |
+| Reverb | Configurable reflection effect |
+| StereoPanner | Can be used to pan an audio stream left or right |
+| Tremolo | Modulation effect that creates a change in volume |
+
+```js
+// Directly connect audio output as an input for ping pong delay plugin
+var ppDelay = ScarletsMedia.pingPongDelay(mediaPlayer.audioOutput);
+
+// Create StereoPanner handler
+var panner = ScarletsMedia.stereoPanner(/* input [optional] */);
+// panner.input (will be available if no input passed on plugin)
+
+// Connect ppDelay output to panner input
+ppDelay.output.connect(panner.input);
+
+// Modify the plugin (Still need to be documented)
+panner.set(-1); // Left channel
+
+// Connect to final destination
+panner.connect(ScarletsMedia.audioContext.destination);
+
+// Visualization
+// player.audioOutput -> pingPongDelay -> Panner -> final destination
 ```
 
 #### Playlist
