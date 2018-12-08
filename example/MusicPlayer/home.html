@@ -8,11 +8,13 @@
 	<script type="text/javascript" src="../../dist/SFMediaStream.min.js"></script>
 </head>
 <body>
+	<audio controls></audio>
+	<br>
 	<input type="text" id="debug">
 	<button onclick="Load()">Load</button>
 	<button onclick="Play()">Play</button>
 	<button onclick="Pause()">Pause</button>
-	<audio></audio>
+	<button onclick="Effect()">Effect</button>
 
 	<script type="text/javascript">
 		var mediaPlayer = new ScarletsMediaPlayer(document.querySelector('audio'));
@@ -34,6 +36,13 @@
 			mediaPlayer.prepare('test.mp3', function(){
 			    input.value = "Prepare complete";
 			});
+		}
+
+		// Add effect
+		function Effect(){
+			var ppDelay = ScarletsMedia.pingPongDelay();
+			mediaPlayer.audioOutput.connect(ppDelay.input);
+			ppDelay.output.connect(ScarletsMedia.audioContext.destination);
 		}
 	</script>
 </body>
