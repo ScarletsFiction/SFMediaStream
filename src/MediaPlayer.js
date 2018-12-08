@@ -7,13 +7,31 @@ window.ScarletsMediaPlayer = function(element){
 	var propertyLinker = ['autoplay', 'loop', 'buffered', 'buffered', 'controller', 'currentTime', 'currentSrc', 'duration', 'ended', 'error', 'readyState', 'networkState', 'paused', 'played', 'seekable', 'seeking'];
 
 	// Get element audio for output node
-	self.audioOutput = ScarletsMedia.getElementAudioNode(element);
+	var audioOutputNode = false;
+	Object.defineProperty(self, 'audioOutput', {
+		get: function(){
+			if(!audioOutputNode)
+				audioOutputNode = ScarletsMedia.getElementAudioNode(element);
+
+			return audioOutputNode;
+		},
+		enumerable: true
+	});
 
 	if(element.tagName.toLowerCase() === 'video'){
 		propertyLinker = propertyLinker.concat(['poster', 'height', 'width']);
 
 		// Get element video for output node
-		self.videoOutput = ScarletsMedia.getElementVideoNode(element);
+		var videoOutputNode = false;
+		Object.defineProperty(self, 'videoOutput', {
+			get: function(){
+				if(!videoOutputNode)
+					videoOutputNode = ScarletsMedia.getElementVideoNode(element);
+
+				return videoOutputNode;
+			},
+			enumerable: true
+		});
 	}
 
 	// Reference element function

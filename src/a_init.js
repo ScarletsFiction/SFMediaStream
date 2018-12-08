@@ -17,7 +17,7 @@ window.ScarletsMedia = {
 	getElementAudioNode:function(elem){
 		elem.crossOrigin = 'anonymous';
 		return this.audioContext.createMediaElementSource(elem);
-	}
+	},
 
 	// videoContext: window.VideoContext ? new VideoContext() : false,
 
