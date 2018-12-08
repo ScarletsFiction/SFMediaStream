@@ -22,7 +22,7 @@ ScarletsMedia.cutOff = function(passType, sourceNode){ // passType: 'lowpass' | 
 				return filterNode.frequency.value;
 			filterNode.frequency.value = value;
 		},
-		peak: function(value){
+		width: function(value){
 			if(value === undefined)
 				return filterNode.Q.value;
 			filterNode.Q.value = value;
