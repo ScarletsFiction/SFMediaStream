@@ -6,8 +6,15 @@ window.ScarletsMediaPlayer = function(element){
 
 	var propertyLinker = ['autoplay', 'loop', 'buffered', 'buffered', 'controller', 'currentTime', 'currentSrc', 'duration', 'ended', 'error', 'readyState', 'networkState', 'paused', 'played', 'seekable', 'seeking'];
 
-	if(element.tagName.toLowerCase() === 'video')
+	// Get element audio for output node
+	self.audioOutput = ScarletsMedia.getElementAudioNode(element);
+
+	if(element.tagName.toLowerCase() === 'video'){
 		propertyLinker = propertyLinker.concat(['poster', 'height', 'width']);
+
+		// Get element video for output node
+		self.videoOutput = ScarletsMedia.getElementVideoNode(element);
+	}
 
 	// Reference element function
 	self.load = function(){

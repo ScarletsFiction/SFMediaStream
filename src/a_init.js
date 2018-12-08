@@ -14,8 +14,16 @@ window.ScarletsMedia = {
 	audioContext: window.AudioContext ? new AudioContext() : false,
 
 	// Get Audio Node from HTML5's audio tag
-	elementNode:function(elem){
+	getElementAudioNode:function(elem){
 		elem.crossOrigin = 'anonymous';
 		return this.audioContext.createMediaElementSource(elem);
+	}
+
+	// videoContext: window.VideoContext ? new VideoContext() : false,
+
+	// Still underdevelopment: https://github.com/bbc/VideoContext
+	getElementVideoNode:function(){
+		elem.crossOrigin = 'anonymous';
+		return null;
 	}
 }
