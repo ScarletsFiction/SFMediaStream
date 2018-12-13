@@ -17,6 +17,11 @@ ScarletsMedia.cutOff = function(passType, sourceNode){ // passType: 'lowpass' | 
 		output:output,
 		input:input,
 		
+		type: function(value){
+			if(value === undefined)
+				return filterNode.type;
+			filterNode.type = value;
+		},
 		frequency: function(value){
 			if(value === undefined)
 				return filterNode.frequency.value;

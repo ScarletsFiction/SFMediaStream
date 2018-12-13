@@ -60,6 +60,8 @@ ScarletsMedia.chorus = function(sourceNode){
     channel[0].delayVibrato.delayTime.value = 0.013;
     channel[1].delayVibrato.delayTime.value = 0.017;
 
+    var options = {rate:0, intensity:0, mix:0};
+
 	var ret =  {
 		// Connect to output
 		// output.connect(context.destination);
@@ -67,11 +69,17 @@ ScarletsMedia.chorus = function(sourceNode){
 		input:input,
 
 		rate: function (value) { // value: 0 ~ 1
+			if(value === undefined) return options.rate;
+			options.rate = value;
+
 	    	value = value * 0.29 + 0.01;
 	    	lfo.frequency.value = value;
 	    },
 
 	    intensity: function (value) { // value: 0 ~ 1
+			if(value === undefined) return options.intensity;
+			options.intensity = value;
+
 	    	var blend = 1.0 - (value * 0.2929);
 	    	var feedforward = value * 0.2929 + 0.7071;
 	    	var feedback = value * 0.7071;
@@ -84,6 +92,9 @@ ScarletsMedia.chorus = function(sourceNode){
 	    },
 
 	    mix: function (value) {
+			if(value === undefined) return options.mix;
+			options.mix = value;
+			
 	    	dry.gain.value = value;
 	    },
 

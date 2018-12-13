@@ -4,24 +4,27 @@ ScarletsMedia.vibrato = function(sourceNode){
 	var input = sourceNode === undefined ? context.createGain() : null;
 	if(input) sourceNode = input;
 
-	console.error("The vibrato effect still need some maintenance");
+    var delayNode = context.createDelay();
+	var wetGainNode = context.createGain();
+	var dryGainNode = context.createGain();
+    var lfoNode = context.createOscillator();
+    var depthNode = context.createGain();
 
-    var filter = context.createBiquadFilter();
-	filter.type = 'peaking';
-	filter.gain.value = 1;
-	filter.Q.value = 1
-	filter.connect(output);
+	sourceNode.connect(dryGainNode);
+	dryGainNode.connect(output);
+	wetGainNode.connect(output);
 
-    sourceNode.connect(filter);
+    delayNode.delayTime.value = 1;
+    depthNode.gain.value = 1;
+    lfoNode.frequency.value = 3;
 
-	var vibratoGainNode = context.createGain();
-	vibratoGainNode.gain.value = 30;
-	vibratoGainNode.connect(filter.detune);
+    lfoNode.type = 'sine';
+    lfoNode.start(0);
 
-	var lfoNode = context.createOscillator();
-	lfoNode.connect(vibratoGainNode);
-	lfoNode.frequency.value = 5;
-	lfoNode.start(0);
+    lfoNode.connect(depthNode);
+    depthNode.connect(delayNode.delayTime);
+    sourceNode.connect(delayNode);
+    delayNode.connect(wetGainNode);
 
 	return {
 		// Connect to output
@@ -29,17 +32,38 @@ ScarletsMedia.vibrato = function(sourceNode){
 		output:output,
 		input:input,
 		
+		mix:function(value){ // value: 0 ~ 1
+			if(value === undefined) return wetGainNode.gain.value;
+			dryGainNode.gain.value = 1 - value;
+			wetGainNode.gain.value = value;
+		},
+		
+		delay:function(value){
+			if(value === undefined) return delayNode.delayTime.value;
+			delayNode.delayTime.value = value;
+		},
+		
+		depth:function(value){
+			if(value === undefined) return depthNode.gain.value;
+			depthNode.gain.value = value;
+		},
+		
 		speed:function(value){
-			if(value === undefined) return ScarletsMedia.extra.denormalize(lfoNode.frequency.value, 0, 20);
-			lfoNode.frequency.value = ScarletsMedia.extra.normalize(value, 0, 20);
+			if(value === undefined) return osc.frequency.value;
+			osc.frequency.value = value;
 		},
 
 		// This should be executed to clean memory
 		destroy:function(){
 			if(input) input.disconnect();
 			output.disconnect();
+
+    		sourceNode.disconnect(delayNode);
+    		sourceNode.disconnect(dryGainNode);
+
 			lfoNode.stop();
 			lfoNode.disconnect();
+			depthNode.disconnect();
 			
 			for(var key in this){
 				delete this[key];

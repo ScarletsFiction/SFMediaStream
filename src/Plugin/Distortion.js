@@ -9,8 +9,14 @@ ScarletsMedia.distortion = function(sourceNode){
 	waveShaperNode.connect(output);
 	sourceNode.connect(waveShaperNode);
 
+	var options = {
+		amount:0
+	};
 	return {
 		set:function(amount){ // amount: 0 ~ 1
+			if(amount === undefined) return options.amount;
+			options.amount = amount;
+			
 			amount = amount * 10;
 		    var curve = new Float32Array(context.sampleRate);
 		    var temp = 2 / context.sampleRate;

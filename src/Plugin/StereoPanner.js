@@ -25,6 +25,7 @@ ScarletsMedia.stereoPanner = function(sourceNode){
 		input:input,
 
 		set:function(pan){ // pan: -1 ~ 1
+			if(pan === undefined) return pannerNode.pan.value;
 			if(stereoSupport)
 				pannerNode.pan.value = pan;
 			else pannerNode.setPosition(pan, 0, 1 - Math.abs(pan));

@@ -23,6 +23,11 @@ ScarletsMedia.harmonizer = function(sourceNode){
     }
 
     output.gain.value = 35.0;
+    var options = {
+    	pitch:0,
+    	slope:0,
+    	width
+    };
 
 	var ret = {
 		// Connect to output
@@ -32,6 +37,9 @@ ScarletsMedia.harmonizer = function(sourceNode){
 		
 		// Change frequency of filters
 	    pitch: function (value) {
+			if(value === undefined) return options.pitch;
+			options.pitch = value;
+			
 	    	var f0 = ScarletsMedia.convert.midiToFreq(value);
 	    	for (var i = 0; i < bands; i++) {
 	    		filters1[i].frequency.value = f0;
@@ -40,12 +48,18 @@ ScarletsMedia.harmonizer = function(sourceNode){
 	    },
 
 	    slope: function (value) {
+			if(value === undefined) return options.slope;
+			options.slope = value;
+			
 	    	for (var i = 0; i < bands; i++) {
 	    		gains[i].gain.value = 1.0 + Math.sin(Math.PI + (Math.PI/2 * (value + i / bands)));
 	    	}
 	    },
 
 	    width: function (value) {
+			if(value === undefined) return options.width;
+			options.width = value;
+			
 	    	for (var i = 1; i < bands; i++) {
 	    		var q = 2 + 90 * Math.pow((1 - i / bands), value);
 	    		filters1[i].Q.value = q;

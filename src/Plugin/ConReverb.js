@@ -15,6 +15,17 @@ ScarletsMedia.conReverb = function(sourceNode){
     dryGainNode.connect(output);
     wetGainNode.connect(output);
 
+    function setBuffer(buffer){
+    	if(reverbNode.buffer !== null){
+    		reverbNode.disconnect();
+    		reverbNode = context.createConvolver();
+
+			sourceNode.connect(reverbNode);
+		    reverbNode.connect(wetGainNode);
+    	}
+    	reverbNode.buffer = buffer;
+    }
+
 	return {
 		// Connect to output
 		// output.connect(context.destination);
@@ -22,9 +33,7 @@ ScarletsMedia.conReverb = function(sourceNode){
 		input:input,
 
 		// This must be set
-		setBuffer:function(buffer){
-			reverbNode.buffer = buffer;
-		},
+		setBuffer:setBuffer,
 
 		// Load audio buffer from url
 		loadBuffer:function(url){
@@ -35,7 +44,7 @@ ScarletsMedia.conReverb = function(sourceNode){
 			ajaxRequest.onload = function(){
 			  var audioData = ajaxRequest.response;
 			  context.decodeAudioData(audioData, function(buffer) {
-			      reverbNode.buffer = buffer;
+			      setBuffer(buffer);
 			  }, function(e){"Error with decoding audio data" + e.err});
 			}
 
