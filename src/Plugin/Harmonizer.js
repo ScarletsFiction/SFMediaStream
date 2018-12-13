@@ -26,7 +26,7 @@ ScarletsMedia.harmonizer = function(sourceNode){
     var options = {
     	pitch:0,
     	slope:0,
-    	width
+    	width:0
     };
 
 	var ret = {
