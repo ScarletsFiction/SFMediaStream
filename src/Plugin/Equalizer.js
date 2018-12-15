@@ -9,33 +9,22 @@ ScarletsMedia.equalizer = function(frequencies, sourceNode){
 	var equalizer = {};
 	var lastIndex = freq.length - 1;
 
-	// Calculate bandpass width
-    var width = (freq.length - 2);
-    if(width <= 0)
-    	width = 0.5;
-    else
-    	width = (1 - 1 / width).toFixed(2);
-
 	for (var i = 0; i < freq.length; i++) {
         var filter = context.createBiquadFilter(); // Frequency pass
-		var gain = context.createGain(); // Gain control
-		gain.gain.value = 0.5;
-        filter.Q.value = 1.0;
+		filter.gain.value = 0;
         filter.frequency.value = freq[i];
 
-        if(i === 0) filter.type = 'lowpass';
-        else if(i === lastIndex) filter.type = 'highpass';
-        else {
-        	filter.type = 'bandpass';
-        	filter.Q.value = width;
-        }
+        if(i === 0) filter.type = 'lowshelf';
+        else if(i === lastIndex) filter.type = 'highshelf';
+        else filter.type = 'peaking';
 
-		sourceNode.connect(filter);
-
-    	filter.connect(gain);
-    	gain.connect(output);
-        equalizer[freq[i]] = [gain, filter];
+		if(i !== 0)
+	    	equalizer[freq[i - 1]].connect(filter);
+        equalizer[freq[i]] = filter;
 	}
+
+	sourceNode.connect(equalizer[freq[0]]);
+	filter.connect(output);
 
 	return {
 		// Connect to output
@@ -43,16 +32,15 @@ ScarletsMedia.equalizer = function(frequencies, sourceNode){
 		output:output,
 		input:input,
 		
-		frequency:function(frequency, gain){ // value: 0 ~ 2
-			if(gain === undefined) return equalizer[frequency][0].gain.value;
-			equalizer[frequency][0].gain.value = gain;
+		frequency:function(frequency, dB){ // value: -20 ~ 20
+			if(dB === undefined) return equalizer[frequency].gain.value;
+			equalizer[frequency].gain.value = dB;
 		},
 
 		// This should be executed to clean memory
 		destroy:function(){
 			for (var i = 0; i < freq.length; i++) {
-	    		equalizer[freq[i]][0].disconnect(); // gain
-	    		equalizer[freq[i]][1].disconnect(); // filter
+	    		equalizer[freq[i]].disconnect(); // filter
 			}
 			equalizer.splice(0);
 
