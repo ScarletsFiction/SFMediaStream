@@ -77,10 +77,8 @@ ScarletsMedia.pitchShift = function(sourceNode){
         for (var i = 0; i < bufferRate; i++) {
             if (i < fadeLength)
                 pitch[i] = Math.sqrt(i / fadeLength);
-            else if (i >= bufferLeft)
-                pitch[i] = Math.sqrt(1 - (i - bufferLeft) / fadeLength);
             else
-                pitch[i] = 1;
+                pitch[i] = Math.sqrt(1 - (i - bufferLeft) / fadeLength);
         }
 
         return buffer;
