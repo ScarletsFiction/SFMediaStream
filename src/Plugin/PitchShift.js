@@ -17,8 +17,8 @@ ScarletsMedia.pitchShift = function(sourceNode){
     modulateGain1.connect(delayNode1.delayTime);
     modulateGain2.connect(delayNode2.delayTime);
 
-    input.connect(delayNode1);
-    input.connect(delayNode2);
+    sourceNode.connect(delayNode1);
+    sourceNode.connect(delayNode2);
 
     var fTime = context.currentTime + fadeTime;
     var bTime = context.currentTime + bufferTime;
@@ -125,6 +125,8 @@ ScarletsMedia.pitchShift = function(sourceNode){
         // output.connect(context.destination);
         output:output,
         input:input,
+
+        // pitchNode:[modulateGain1, modulateGain2],
 
         shift:function(value){ // -3 ~ 3
             if(value === undefined) return;

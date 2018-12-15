@@ -4,25 +4,26 @@ ScarletsMedia.vibrato = function(sourceNode){
 	var input = sourceNode === undefined ? context.createGain() : null;
 	if(input) sourceNode = input;
 
+	console.log("Vibrato was not finished yet");
+
     var delayNode = context.createDelay();
 	var wetGainNode = context.createGain();
 	var dryGainNode = context.createGain();
     var lfoNode = context.createOscillator();
-    var depthNode = context.createGain();
+    //var depthNode = context.createGain();
 
 	sourceNode.connect(dryGainNode);
 	dryGainNode.connect(output);
 	wetGainNode.connect(output);
 
     delayNode.delayTime.value = 1;
-    depthNode.gain.value = 1;
+    //depthNode.gain.value = 1;
     lfoNode.frequency.value = 3;
-
     lfoNode.type = 'sine';
     lfoNode.start(0);
 
-    lfoNode.connect(depthNode);
-    depthNode.connect(delayNode.delayTime);
+    lfoNode.connect(delayNode.delayTime);
+    //depthNode.connect(delayNode.delayTime);
     sourceNode.connect(delayNode);
     delayNode.connect(wetGainNode);
 
@@ -49,8 +50,8 @@ ScarletsMedia.vibrato = function(sourceNode){
 		},
 		
 		speed:function(value){
-			if(value === undefined) return osc.frequency.value;
-			osc.frequency.value = value;
+			if(value === undefined) return lfoNode.frequency.value;
+			lfoNode.frequency.value = value;
 		},
 
 		// This should be executed to clean memory
