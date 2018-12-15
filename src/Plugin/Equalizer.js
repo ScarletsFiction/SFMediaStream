@@ -10,14 +10,16 @@ ScarletsMedia.equalizer = function(frequencies, sourceNode){
 	var lastIndex = freq.length - 1;
 
 	// Calculate bandpass width
-    var width = (freq.length - 3);
-    if(width <= 1) width = 1.1;
-
-    width = (4 - 4 / width).toFixed(2);
+    var width = (freq.length - 2);
+    if(width <= 0)
+    	width = 0.5;
+    else
+    	width = (1 - 1 / width).toFixed(2);
 
 	for (var i = 0; i < freq.length; i++) {
         var filter = context.createBiquadFilter(); // Frequency pass
 		var gain = context.createGain(); // Gain control
+		gain.gain.value = 0.5;
         filter.Q.value = 1.0;
         filter.frequency.value = freq[i];
 
