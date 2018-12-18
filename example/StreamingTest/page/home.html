@@ -11,7 +11,8 @@
 <body>
 	<button onclick="asPresenter()">Presenter</button>
 	<button onclick="asStreamer()">Streamer</button>
-	<input type="text" id="debug">
+	<input type="text" id="debug"><br>
+	Presenter must be online before the streamer
 
 	<script type="text/javascript">
 		var mySocket = io("/", {transports:['websocket']});
