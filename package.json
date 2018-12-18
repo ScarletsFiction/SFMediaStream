@@ -1,0 +1,29 @@
+{
+  "name": "sfmediastream",
+  "version": "0.9.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ScarletsFiction/SFMediaStream.git"
+  },
+  "author": "Stefanus Arya CG",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ScarletsFiction/SFMediaStream/issues"
+  },
+  "browserslist": [
+    "Android > 4",
+    "IOS >= 7",
+    "last 2 versions",
+    "ie >= 10"
+  ],
+  "devDependencies": {
+    "gulp": "*",
+    "gulp-autoprefixer": "*",
+    "gulp-header": "*",
+    "gulp-csso": "*",
+    "browser-sync": "*",
+    "gulp-concat": "*",
+    "gulp-sourcemaps": "*",
+    "gulp-uglify-es": "*"
+  }
+}

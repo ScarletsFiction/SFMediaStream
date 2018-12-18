@@ -17,8 +17,7 @@ gulp.task('js', function(){
             "targets": {
               "ie": "9"
             },
-            "loose":true,
-            "modules": false
+            "loose":true
           }
         ]
       ]
