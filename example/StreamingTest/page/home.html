@@ -11,16 +11,19 @@
 <body>
 	<button onclick="asPresenter()">Presenter</button>
 	<button onclick="asStreamer()">Streamer</button>
+	<button onclick="streamerEffect()">Effect (for streamer)</button>
 	<input type="text" id="debug"><br>
 	Presenter must be online before the streamer
 
 	<script type="text/javascript">
 		var mySocket = io("/", {transports:['websocket']});
-
 		var debug = document.querySelector('#debug');
+
+		// ===== Presenter =====
+		var presenterMedia = false;
 		function asPresenter(){
 			// Set latency to 100ms (Equal with streamer)
-			var presenterMedia = new ScarletsMediaPresenter({
+			presenterMedia = new ScarletsMediaPresenter({
 			    audio:{
 			        channelCount:1,
 			        echoCancellation: false
@@ -39,17 +42,18 @@
 			}
 
 			presenterMedia.onBufferProcess = function(streamData){
-				debug.value = "Buffer sent: "+streamData[0].byteLength+"bytes";
+				debug.value = "Buffer sent: " + streamData[0].size + "bytes";
 			    mySocket.emit('stream', streamData);
 			}
 
 			presenterMedia.startRecording();
 		}
 
+		// ===== Streamer =====
 		var audioStreamer = false;
 		function asStreamer(){
 			// Set latency to 100ms (Equal with presenter)
-			audioStreamer = new ScarletsAudioBufferStreamer(3, 100);
+			audioStreamer = new ScarletsAudioBufferStreamer(3, 100, true);
 			audioStreamer.playStream();
 
 			// Buffer header must be received first
@@ -66,6 +70,21 @@
 
 			// Request buffer header
 			mySocket.emit('requestBufferHeader', '');
+		}
+
+		// ===== Streamer Audio Effect =====
+		function streamerEffect(){
+			if(audioStreamer === false){
+				console.error("Streamer haven't been initialized");
+				return;
+			}
+
+			var ppDelay = ScarletsMedia.pingPongDelay();
+			audioStreamer.outputNode = ScarletsMedia.audioContext.createGain();
+
+			// Stream (source) -> Ping pong delay -> destination
+			audioStreamer.outputNode.connect(ppDelay.input);
+			ppDelay.output.connect(ScarletsMedia.audioContext.destination);
 		}
 	</script>
 </body>
