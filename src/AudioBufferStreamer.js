@@ -1,5 +1,5 @@
 // Minimum 3 bufferElement
-window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
+window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration, webAudio){
 	if(!bufferElement || bufferElement < 3) bufferElement = 3;
 	if(!chunksDuration) chunksDuration = 1000;
 
@@ -21,8 +21,9 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 	scope.mimeType = null;
 
 	// Use webAudio for mobile, and HTML5 audio for computer
-	scope.webAudio = ScarletsMedia.extra.isMobile()?true:false; // Mobile browser have security on HTML element
+	scope.webAudio = webAudio || ScarletsMedia.extra.isMobile() ? true : false; // Mobile browser have security on HTML element
 	scope.audioContext = ScarletsMedia.audioContext;
+	scope.outputNode = false; // Set this to a connectable Audio Node  
 	// Avoid webAudio for computer browser because memory usage
 
 	var bufferHeader = false;
@@ -44,47 +45,53 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 			});
 	}
 
-	var initAudioEvent = function(i){
-		scope.bufferElement[i].onended = function(){
-			if(scope.debug) console.log("Buffer ended with ID: "+i);
-
-			if(!scope.webAudio){ // HTML5 Audio
-				URL.revokeObjectURL(scope.bufferElement[i].src);
-				scope.bufferElement[i].src = '';
-			} else this.disconnect(0);
-
-			if(!scope.realtime){
-				scope.bufferAvailable[i] = false;
-				scope.playing = false;
-				scope.buffering = true;
-				scope.playAvailable();
-
-				if(scope.bufferAvailable.indexOf(false)!=-1&&scope.bufferPending.length!=0)
-					fillEmptyBuffer();
-			}
-		};
-	}
-
 	// First initialization
 	for (var i = 0; i < bufferElement; i++) addBufferElement(i);
 	function addBufferElement(i){
 		if(scope.webAudio){
-			scope.bufferElement.push(scope.audioContext.createBufferSource());
+			scope.bufferElement.push(createBufferSource());
 			scope.bufferAvailable.push(false);
-		} else { // HTML5 Audio
+		}
+		else { // HTML5 Audio
 			var audioHandler = new Audio();
 			if(audioHandler){
 				scope.bufferElement.push(audioHandler);
 				scope.bufferAvailable.push(false);
-				initAudioEvent(i);
+
+				audioHandler.onended = function(){
+					if(scope.debug) console.log("Buffer ended with ID: "+i);
+
+					URL.revokeObjectURL(this.src);
+					this.src = '';
+
+					if(!scope.realtime){
+						scope.bufferAvailable[i] = false;
+						scope.playing = false;
+						scope.buffering = true;
+						scope.playAvailable();
+
+						if(scope.bufferAvailable.indexOf(false) !== -1 && scope.bufferPending.length != 0)
+							fillEmptyBuffer();
+					}
+				};
 			}
 		}
+	}
+
+	function createBufferSource(){
+		var temp = scope.audioContext.createBufferSource();
+		temp.onended = function(){
+			this.stop();
+			this.disconnect();
+		}
+		return temp;
 	}
 
 	var addBufferHeader = function(arrayBuffer){
 		var finalBuffer = new Uint8Array(bufferHeaderLength + arrayBuffer.byteLength);
 		finalBuffer.set(bufferHeader, 0);
 		finalBuffer.set(new Uint8Array(arrayBuffer), bufferHeaderLength);
+		console.log(finalBuffer.buffer);
 		return finalBuffer.buffer;
 	}
 
@@ -112,17 +119,23 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 	}
 
 	function webAudioBufferInsert(index, buffer){
-		var transferFunction = scope.bufferElement[index].onended;
-		scope.bufferElement[index] = scope.audioContext.createBufferSource();
+		scope.bufferElement[index] = createBufferSource();
 		scope.bufferElement[index].buffer = buffer;
-		scope.bufferElement[index].connect(scope.audioContext.destination);
-		scope.bufferElement[index].onended = transferFunction;
+
+		if(scope.outputNode && scope.outputNode.context)
+			scope.bufferElement[index].connect(scope.outputNode);
+
+		else // Direct output to destination
+			scope.bufferElement[index].connect(scope.audioContext.destination);
 	}
 
 	var fileReader = new FileReader();
 	var realtimeBufferInterval = 0; // Need 3 bufferElement, other than this will give lower quality
 	scope.realtimeBufferPlay = function(arrayBuffer){
 		if(scope.debug) console.log("Receiving data", arrayBuffer[0].byteLength);
+		if(arrayBuffer[0].byteLength === 0) return;
+		arrayBuffer = arrayBuffer[0];
+
 		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) +
 			chunksDuration/1000 + scope.audioContext.baseLatency;
 
@@ -140,10 +153,11 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 					scope.bufferElement[index].start(scope.bufferSkip);
 				});
 			};
-			fileReader.readAsArrayBuffer(new Blob([bufferHeader, arrayBuffer[0]], {type:scope.mimeType}));
-		} else { // HTML5 Audio
+			fileReader.readAsArrayBuffer(new Blob([bufferHeader, arrayBuffer], {type:scope.mimeType}));
+		}
+		else { // HTML5 Audio
 			URL.revokeObjectURL(scope.bufferElement[index].src);
-			scope.bufferElement[index].src = URL.createObjectURL(new Blob([bufferHeader, arrayBuffer[0]], {type:scope.mimeType}));
+			scope.bufferElement[index].src = URL.createObjectURL(new Blob([bufferHeader, arrayBuffer], {type:scope.mimeType}));
 			scope.bufferElement[index].load();
 			scope.bufferElement[index].play();
 			scope.bufferElement[index].currentTime = scope.bufferSkip;
@@ -164,7 +178,8 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 				});
 			};
 			fileReader.readAsArrayBuffer(new Blob([bufferHeader, scope.bufferPending[0]], {type:scope.mimeType}));
-		} else { // HTML5 Audio
+		}
+		else { // HTML5 Audio
 			scope.bufferElement[index].src = URL.createObjectURL(new Blob([bufferHeader, scope.bufferPending[0]], {type:scope.mimeType}));
 			scope.bufferElement[index].load();
 		}
@@ -226,7 +241,6 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration){
 		scope.bufferPending.splice(0);
 		for (var i = 0; i < bufferElement; i++) {
 			scope.bufferElement[i].stop();
-			initAudioEvent(i);
 			scope.bufferAvailable[i] = false;
 		}
 		scope.playing = false;
