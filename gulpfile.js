@@ -37,10 +37,10 @@ gulp.task('js', function(){
 });
 
 gulp.task('watch', function() {
-  gulp.watch(['src/**/*.js'], ['js']);
+  gulp.watch(['src/**/*.js'], gulp.series('js'));
 });
 
-gulp.task('default', ['js']);
+gulp.task('default', gulp.series('js'));
 
 function swallowError(error){
   console.log(error.message)
