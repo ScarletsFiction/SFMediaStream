@@ -17,7 +17,7 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration, web
 	scope.latency = 0;
 	scope.error = 0;
 	scope.realtime = false;
-	scope.bufferSkip = 0.07;
+	scope.bufferSkip = 0.07; // Set this higher when you hear any pitch
 	scope.mimeType = null;
 
 	// Use webAudio for mobile, and HTML5 audio for computer
@@ -27,16 +27,14 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration, web
 	// Avoid webAudio for computer browser because memory usage
 
 	var bufferHeader = false;
-	var bufferHeaderLength = false;
 
 	scope.setBufferHeader = function(arrayBuffer){
 		if(!arrayBuffer){
-			bufferHeader = bufferHeaderLength = false;
+			bufferHeader = false;
 			return;
 		}
 
-		bufferHeader = arrayBuffer;
-		bufferHeaderLength = arrayBuffer.byteLength;
+		bufferHeader = new Uint8Array(arrayBuffer);
 
 		// Find buffer skip
 		if(scope.audioContext)
@@ -88,10 +86,9 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration, web
 	}
 
 	var addBufferHeader = function(arrayBuffer){
-		var finalBuffer = new Uint8Array(bufferHeaderLength + arrayBuffer.byteLength);
+		var finalBuffer = new Uint8Array(bufferHeader.byteLength + arrayBuffer.byteLength);
 		finalBuffer.set(bufferHeader, 0);
-		finalBuffer.set(new Uint8Array(arrayBuffer), bufferHeaderLength);
-		console.log(finalBuffer.buffer);
+		finalBuffer.set(new Uint8Array(arrayBuffer), bufferHeader.byteLength);
 		return finalBuffer.buffer;
 	}
 
@@ -147,13 +144,10 @@ window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration, web
 			realtimeBufferInterval = 0;
 
 		if(scope.webAudio){
-			fileReader.onload = function() {
-				scope.audioContext.decodeAudioData(this.result, function(buffer){
-					webAudioBufferInsert(index, buffer);
-					scope.bufferElement[index].start(scope.bufferSkip);
-				});
-			};
-			fileReader.readAsArrayBuffer(new Blob([bufferHeader, arrayBuffer], {type:scope.mimeType}));
+			scope.audioContext.decodeAudioData(addBufferHeader(arrayBuffer), function(buffer){
+				webAudioBufferInsert(index, buffer);
+				scope.bufferElement[index].start(scope.bufferSkip);
+			});
 		}
 		else { // HTML5 Audio
 			URL.revokeObjectURL(scope.bufferElement[index].src);
