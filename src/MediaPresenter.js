@@ -95,14 +95,22 @@ window.ScarletsMediaPresenter = function(streamInfo, latency){
 		};
 
 		scope.mediaRecorder.ondataavailable = function(e) {
+			if(bufferHeaderLength !== false){
+				if(e.data.size === 0) return;
+
+				var streamingTime = Number(String(Date.now()).slice(-5, -3));
+				scope.onBufferProcess([e.data, streamingTime]);
+				return;
+			}
+
 			fileReader.onload = function() {
 				var arrayBuffer = this.result;
 
-				if(bufferHeaderLength===false){
+				if(bufferHeaderLength === false){
 					bufferHeaderLength = arrayBuffer.byteLength;
-					if(bufferHeaderLength==0){
+					if(bufferHeaderLength == 0){
 						bufferHeaderLength = false;
-						setTimeout(function(){scope.mediaRecorder.requestData()}, 1);
+						setTimeout(function(){scope.mediaRecorder.requestData()}, 0);
 						return;
 					}
 
@@ -113,12 +121,6 @@ window.ScarletsMediaPresenter = function(streamInfo, latency){
 						scope.onRecordingReady(scope.bufferHeader);
 					scope.recordingReady = true;
 				}
-				else{
-					if(scope.onBufferProcess){
-						var streamingTime = Number(String(Date.now()).slice(-5, -3));
-						scope.onBufferProcess([arrayBuffer, streamingTime]);
-					}
-				}
 			};
 			fileReader.readAsArrayBuffer(e.data);
 		};
@@ -127,7 +129,7 @@ window.ScarletsMediaPresenter = function(streamInfo, latency){
 		scope.mediaRecorder.start();
 
 		// Stop recording after 3 seconds and broadcast it to server
-		recordingInterval = setInterval(function() {
+		recordingInterval = ScarletsMedia.extra.preciseInterval(function(){
 			if(!scope.recordingReady) return;
 			scope.mediaRecorder.requestData();
 		}, latency);
@@ -145,7 +147,7 @@ window.ScarletsMediaPresenter = function(streamInfo, latency){
 	};
 
 	scope.stopRecording = function(){
-		clearInterval(recordingInterval);
+		ScarletsMedia.extra.clearPreciseInterval(recordingInterval);
 		scope.mediaRecorder.stop();
 		if(!scope.mediaRecorder.stream.stop){
 			var streams = scope.mediaRecorder.stream.getTracks();
