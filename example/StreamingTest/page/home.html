@@ -32,7 +32,7 @@
 
 			presenterMedia.onRecordingReady = function(arrayBuffer){
 			    console.log("Recording started!");
-			    console.log("Header size: " + arrayBuffer.byteLength);
+			    console.log("Header size: " + arrayBuffer.size);
 
 			    // Every new client streamer must receive this header buffer data
 			    mySocket.emit('bufferHeader', {

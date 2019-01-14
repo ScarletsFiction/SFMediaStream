@@ -28,9 +28,8 @@ window.ScarletsMediaPresenter = function(streamInfo, latency){
 
 	scope.mediaGranted = false;
 
-	var fileReader = new FileReader();
 	scope.options = {};
-	if(streamInfo.audio&&!streamInfo.video){
+	if(streamInfo.audio && !streamInfo.video){
 		if(MediaRecorder.isTypeSupported('audio/webm;codecs="vp9"'))
 			scope.options.mimeType = 'audio/webm;codecs="vp9"';
 		else if(MediaRecorder.isTypeSupported('audio/webm;codecs="vp8"'))
@@ -50,7 +49,7 @@ window.ScarletsMediaPresenter = function(streamInfo, latency){
 		else if(MediaRecorder.isTypeSupported('audio/mp4'))
 			scope.options.mimeType = 'audio/mp4';
 	}
-	else if(!streamInfo.audio&&streamInfo.video){
+	else if(!streamInfo.audio && streamInfo.video){
 		if(MediaRecorder.isTypeSupported('video/webm;codecs="vp9"'))
 			scope.options.mimeType = 'video/webm;codecs="vp9"';
 		else if(MediaRecorder.isTypeSupported('video/webm;codecs="vp8"'))
@@ -89,9 +88,9 @@ window.ScarletsMediaPresenter = function(streamInfo, latency){
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
 			scope.recording = true;
-			if(bufferHeaderLength===false){
+
+			if(bufferHeaderLength === false)
 				scope.mediaRecorder.requestData();
-			}
 		};
 
 		scope.mediaRecorder.ondataavailable = function(e) {
@@ -103,32 +102,27 @@ window.ScarletsMediaPresenter = function(streamInfo, latency){
 				return;
 			}
 
-			fileReader.onload = function() {
-				var arrayBuffer = this.result;
+			// Wait until media header was available
+			if(e.data.size === 0){
+				setTimeout(function(){scope.mediaRecorder.requestData()}, 0);
+				return;
+			}
 
-				if(bufferHeaderLength === false){
-					bufferHeaderLength = arrayBuffer.byteLength;
-					if(bufferHeaderLength == 0){
-						bufferHeaderLength = false;
-						setTimeout(function(){scope.mediaRecorder.requestData()}, 0);
-						return;
-					}
+			// The audio buffer can contain some duration that causes a noise
+			// So we will need to remove it on streamer side
+			// Because the AudioBuffer can't be converted to ArrayBuffer with WebAudioAPI
+			scope.bufferHeader = e.data;
+			bufferHeaderLength = e.data.byteLength;
 
-					// ToDo: Clean media header
-					scope.bufferHeader = arrayBuffer;
-
-					if(scope.onRecordingReady)
-						scope.onRecordingReady(scope.bufferHeader);
-					scope.recordingReady = true;
-				}
-			};
-			fileReader.readAsArrayBuffer(e.data);
+			if(scope.onRecordingReady)
+				scope.onRecordingReady(scope.bufferHeader);
+			scope.recordingReady = true;
 		};
 
 		// Get first header
 		scope.mediaRecorder.start();
 
-		// Stop recording after 3 seconds and broadcast it to server
+		// Obtain data after some interval
 		recordingInterval = ScarletsMedia.extra.preciseInterval(function(){
 			if(!scope.recordingReady) return;
 			scope.mediaRecorder.requestData();
