@@ -4,11 +4,21 @@ var sourcemaps = require('gulp-sourcemaps');
 var uglify = require('gulp-uglify-es').default;
 var header = require('gulp-header');
 var babel = require('gulp-babel');
+var rename = require('gulp-rename');
+var order = require("gulp-order");
 
 gulp.task('js', function(){
   return gulp.src('src/**/*.js')
     .pipe(sourcemaps.init())
-    .pipe(concat('SFMediaStream.min.js'))
+    .pipe(order([
+      'a_init.js',
+      '**/*.js',
+      'z_extra.js'
+    ]))
+    .pipe(concat('SFMediaStream.js'))
+    .pipe(gulp.dest('dist'))
+    
+    .pipe(rename('SFMediaStream.min.js'))
     .pipe(babel({
       "presets": [
         [
@@ -17,7 +27,8 @@ gulp.task('js', function(){
             "targets": {
               "ie": "9"
             },
-            "loose":true
+            "loose":true,
+            "modules": false
           }
         ]
       ]
