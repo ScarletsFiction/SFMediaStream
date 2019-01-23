@@ -44,7 +44,7 @@
 
 		// Add effect
 		function Effect(){
-			var ppDelay = ScarletsMedia.pingPongDelay();
+			var ppDelay = ScarletsMediaEffect.pingPongDelay();
 			mediaPlayer.audioOutput.connect(ppDelay.input);
 			ppDelay.output.connect(ScarletsMedia.audioContext.destination);
 		}

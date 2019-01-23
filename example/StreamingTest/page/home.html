@@ -28,7 +28,7 @@
 			        channelCount:1,
 			        echoCancellation: false
 			    }
-			}, 1000);
+			}, 100);
 
 			presenterMedia.onRecordingReady = function(arrayBuffer){
 			    console.log("Recording started!");
@@ -53,7 +53,7 @@
 		var audioStreamer = false;
 		function asStreamer(){
 			// Set latency to 100ms (Equal with presenter)
-			audioStreamer = new ScarletsAudioBufferStreamer(3, 1000, true);
+			audioStreamer = new ScarletsAudioBufferStreamer(3, 100, true);
 			audioStreamer.playStream();
 
 			// Buffer header must be received first
@@ -79,7 +79,7 @@
 				return;
 			}
 
-			var ppDelay = ScarletsMedia.pingPongDelay();
+			var ppDelay = ScarletsMediaEffect.pingPongDelay();
 			audioStreamer.outputNode = ScarletsMedia.audioContext.createGain();
 
 			// Stream (source) -> Ping pong delay -> destination
