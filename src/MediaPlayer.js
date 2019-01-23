@@ -1,6 +1,6 @@
 // https://www.w3schools.com/tags/ref_av_dom.asp
 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
-window.ScarletsMediaPlayer = function(element){
+var ScarletsMediaPlayer = function(element){
 	// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
 	var self = this;
 

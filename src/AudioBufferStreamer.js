@@ -1,5 +1,5 @@
 // Minimum 3 bufferElement
-window.ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration, webAudio){
+var ScarletsAudioBufferStreamer = function(bufferElement, chunksDuration, webAudio){
 	if(!bufferElement || bufferElement < 3) bufferElement = 3;
 	if(!chunksDuration) chunksDuration = 1000;
 

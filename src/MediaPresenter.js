@@ -1,6 +1,6 @@
 // streamInfo = mediaDevices.getUserMedia({thisData})
 // latency = 0ms is not possible (minimum is 70ms, or depend on computer performance)
-window.ScarletsMediaPresenter = function(streamInfo, latency){
+var ScarletsMediaPresenter = function(streamInfo, latency){
 	var scope = this;
 	if(!latency) latency = 1000;
 	//var streamInfo = {
