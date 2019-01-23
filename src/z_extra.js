@@ -153,3 +153,21 @@ ScarletsMedia.extra = new function(){
 		requestAnimationFrame(preciseTimer);
 	}
 };
+
+if(moduleMode){
+	global.Media = ScarletsMedia;
+	global.MediaEffect = ScarletsMediaEffect;
+	global.AudioBufferStreamer = ScarletsAudioBufferStreamer;
+	global.MediaPlayer = ScarletsMediaPlayer;
+	global.MediaPresenter = ScarletsMediaPresenter;
+}
+else{
+	global.ScarletsMedia = ScarletsMedia;
+	global.ScarletsMediaEffect = ScarletsMediaEffect;
+	global.ScarletsAudioBufferStreamer = ScarletsAudioBufferStreamer;
+	global.ScarletsMediaPlayer = ScarletsMediaPlayer;
+	global.ScarletsMediaPresenter = ScarletsMediaPresenter;
+}
+
+// ===== Module End =====
+})));

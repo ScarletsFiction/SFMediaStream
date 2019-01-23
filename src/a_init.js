@@ -7,10 +7,17 @@
 	
 	Make sure you include this header on this script
 */
-'use strict';
+(function(global, factory){
+  if(typeof exports === 'object' && typeof module !== 'undefined'){
+  	module.exports = {};
+  	factory(module.exports, window, true);
+  }
+  else factory(global, window);
+}(this, (function(global, window, moduleMode){'use strict';
+// ===== Module Init =====
 
 // Initialize global data
-window.ScarletsMedia = {
+var ScarletsMedia = {
 	audioContext: false, // Created after user gesture
 
 	// Get Audio Node from HTML5's audio tag
@@ -27,6 +34,8 @@ window.ScarletsMedia = {
 		return null;
 	}
 };
+
+var ScarletsMediaEffect = {};
 
 // Unlock mobile media security
 (function(){
