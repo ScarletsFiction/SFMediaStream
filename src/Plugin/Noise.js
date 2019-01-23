@@ -1,4 +1,4 @@
-ScarletsMedia.noise = function(){
+ScarletsMediaEffect.noise = function(){
 	var context = this.audioContext;
 	var output = context.createGain();
 	var input = sourceNode === undefined ? context.createGain() : null;

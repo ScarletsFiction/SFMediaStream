@@ -1,4 +1,4 @@
-ScarletsMedia.reverb = function(sourceNode){
+ScarletsMediaEffect.reverb = function(sourceNode){
 	var context = this.audioContext;
 	
 	var output = context.createGain();

@@ -1,4 +1,4 @@
-ScarletsMedia.flanger = function(sourceNode){
+ScarletsMediaEffect.flanger = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
 	var input = sourceNode === undefined ? context.createGain() : null;

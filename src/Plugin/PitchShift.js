@@ -1,4 +1,4 @@
-ScarletsMedia.pitchShift = function(sourceNode){
+ScarletsMediaEffect.pitchShift = function(sourceNode){
     var context = this.audioContext;
     var output = context.createGain();
     var input = sourceNode === undefined ? context.createGain() : null;

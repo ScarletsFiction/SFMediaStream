@@ -1,4 +1,4 @@
-ScarletsMedia.harmonizer = function(sourceNode){
+ScarletsMediaEffect.harmonizer = function(sourceNode){
 	var context = this.audioContext;
 	var output = context.createGain();
 	var input = sourceNode === undefined ? context.createGain() : null;
