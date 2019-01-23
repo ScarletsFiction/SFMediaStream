@@ -13,7 +13,7 @@
   	factory(module.exports, window, true);
   }
   else factory(global, window);
-}(this, (function(global, window, moduleMode){'use strict';
+}(this || window, (function(global, window, moduleMode){'use strict';
 // ===== Module Init =====
 
 // Initialize global data
