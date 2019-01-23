@@ -5,7 +5,29 @@
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=SFMediaStream%20is%20alibrary%20for%20playing%20media%20or%20stream%20microphone.&url=https://github.com/ScarletsFiction/SFMediaStream&via=github&hashtags=SFMediaStream,video,audio,playlist,stream,microphone)
 
 # SFMediaStream
-A HTML5 media streamer library for playing music, video, or even microphone & camera live streaming with node server
+A HTML5 media streamer library for playing music, video, or even microphone & camera live streaming with node server. The transmitted data is compressed (depend on the browser media encoder) before being sent to node server, and the latency is configurable.
+
+The default configuration is intended for newer browser. If you want to build 2-way communication for older and newer browser, then you must send streamer encoding information to the presenter before start the communication or using mp4 instead of opus.
+
+## Install with CDN link
+You can download minified js from this repository or use this CDN link
+`<script type="text/javascript" src='https://unpkg.com/sfmediastream@latest/dist/SFMediaStream.min.js'></script>`
+
+And include it on your project
+```js
+var presenter = new ScarletsMediaPresenter(...);
+var streamer = new ScarletsAudioBufferStreamer(...);
+```
+
+#### Install with NPM
+`npm i sfmediastream`
+
+And include it on your project
+```js
+const {MediaPresenter, AudioBufferStreamer, ...} = require('sfmediastream');
+var presenter = new MediaPresenter(...);
+var streamer = new AudioBufferStreamer(...);
+```
 
 ## How to use
 ### ScarletsMediaPresenter
@@ -320,13 +342,13 @@ mediaPlayer.audioFadeEffect = true;
 Can be used to connect the media to other effect or plugin like equalizer
 ```js
 // Create equalizer and pass audio output as equalizer input
-var equalizer = ScarletsMedia.equalizer(null, mediaPlayer.audioOutput);
+var equalizer = ScarletsMediaEffect.equalizer(null, mediaPlayer.audioOutput);
 
 // Connect to final destination
 equalizer.output.connect(ScarletsMedia.audioContext.destination);
 ```
 
-#### Audio Effect
+#### ScarletsMediaEffect
 This feature can be used on every media if you have the media source node as the input. And make sure every node is connected to `AudioContext.destination` or it will not playable.
 
 The plugins have a function to destroy node connection that aren't being used. So don't forget to destroy your unused effect to clean unused memory.
@@ -355,10 +377,10 @@ effect.destroy();
 
 ```js
 // Directly connect audio output as an input for ping pong delay plugin
-var ppDelay = ScarletsMedia.pingPongDelay(mediaPlayer.audioOutput);
+var ppDelay = ScarletsMediaEffect.pingPongDelay(mediaPlayer.audioOutput);
 
 // Create StereoPanner handler
-var panner = ScarletsMedia.stereoPanner(/* input [optional] */);
+var panner = ScarletsMediaEffect.stereoPanner(/* input [optional] */);
 // panner.input (will be available if no input passed on plugin)
 
 // Connect ppDelay output to panner input
