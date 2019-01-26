@@ -94,17 +94,13 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 		};
 
 		scope.mediaRecorder.ondataavailable = function(e) {
-			if(bufferHeaderLength !== false){
-				if(e.data.size === 0) return;
+			// Wait until media header was available
+			if(e.data.size === 0) return;
 
+			// Get the first segment that contain header
+			if(bufferHeaderLength !== false){
 				var streamingTime = Number(String(Date.now()).slice(-5, -3));
 				scope.onBufferProcess([e.data, streamingTime]);
-				return;
-			}
-
-			// Wait until media header was available
-			if(e.data.size === 0){
-				setTimeout(function(){scope.mediaRecorder.requestData()}, 0);
 				return;
 			}
 
@@ -120,13 +116,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 		};
 
 		// Get first header
-		scope.mediaRecorder.start();
-
-		// Obtain data after some interval
-		recordingInterval = ScarletsMedia.extra.preciseInterval(function(){
-			if(!scope.recordingReady) return;
-			scope.mediaRecorder.requestData();
-		}, latency);
+		scope.mediaRecorder.start(latency);
 	}
 
 	scope.startRecording = function(){
