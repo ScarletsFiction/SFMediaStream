@@ -76,7 +76,6 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 			scope.options.mimeType = 'video/mp4';
 	}
 
-	var recordingInterval = false;
 	var mediaGranted = function(mediaStream) {
 		scope.mediaGranted = true;
 
@@ -88,21 +87,19 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
 			scope.recording = true;
-
-			if(bufferHeaderLength === false)
-				scope.mediaRecorder.requestData();
 		};
 
-		scope.mediaRecorder.ondataavailable = function(e) {
-			// Wait until media header was available
-			if(e.data.size === 0) return;
-
-			// Get the first segment that contain header
+		scope.mediaRecorder.ondataavailable = function(e){
+			// Stream segments after the header was obtained
 			if(bufferHeaderLength !== false){
 				var streamingTime = Number(String(Date.now()).slice(-5, -3));
 				scope.onBufferProcess([e.data, streamingTime]);
 				return;
 			}
+
+			// Return if the recording was stopped
+			if(scope.mediaRecorder.state !== 'recording')
+				return;
 
 			// The audio buffer can contain some duration that causes a noise
 			// So we will need to remove it on streamer side
@@ -120,18 +117,22 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	}
 
 	scope.startRecording = function(){
-		if(!scope.mediaGranted || !scope.mediaRecorder.stream || !scope.mediaRecorder.stream.active){
+		if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
-			navigator.mediaDevices.getUserMedia(streamInfo).then(mediaGranted).catch(console.error);
+			navigator.mediaDevices.getUserMedia(streamInfo)
+				.then(mediaGranted).catch(console.error);
+			return false;
 		}
+		else if(scope.mediaRecorder.state === 'recording')
+			return true;
 		else{
-			scope.mediaRecorder.start();
+			scope.mediaRecorder.start(latency);
 			scope.recording = true;
+			return true;
 		}
 	};
 
 	scope.stopRecording = function(){
-		ScarletsMedia.extra.clearPreciseInterval(recordingInterval);
 		scope.mediaRecorder.stop();
 		if(!scope.mediaRecorder.stream.stop){
 			var streams = scope.mediaRecorder.stream.getTracks();
