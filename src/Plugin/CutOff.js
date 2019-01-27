@@ -1,5 +1,5 @@
 ScarletsMediaEffect.cutOff = function(passType, sourceNode){ // passType: 'lowpass' | 'bandpass' | 'highpass'
-	var context = this.audioContext;
+	var context = ScarletsMedia.audioContext;
 	var output = context.createGain();
 	var input = sourceNode === undefined ? context.createGain() : null;
 	if(input) sourceNode = input;

@@ -1,6 +1,6 @@
 ScarletsMediaEffect.equalizer = function(frequencies, sourceNode){
 	var freq = frequencies || [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
-	var context = this.audioContext;
+	var context = ScarletsMedia.audioContext;
 	
 	var output = context.createGain(); // Combine all effect
 	var input = sourceNode === undefined ? context.createGain() : null;
