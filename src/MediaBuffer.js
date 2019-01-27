@@ -6,6 +6,7 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 	var sourceBuffer = null;
 	scope.source.addEventListener('sourceopen', function(){
 		sourceBuffer = scope.source.addSourceBuffer(mimeType);
+		sourceBuffer.mode = 'sequence';
 		sourceBuffer.appendBuffer(bufferHeader);
 	}, {once:true});
 
