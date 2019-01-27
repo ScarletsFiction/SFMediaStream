@@ -39,7 +39,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 		for(var format in codecsList){
 			var mimeType = mediaType+'/'+format;
 			var codecs = codecsList[format];
-			
+
 			for (var i = 0; i < codecs.length; i++) {
 				var temp = mimeType+';codecs="'+codecs[i]+'"';
 				if(MediaRecorder.isTypeSupported(temp) && MediaSource.isTypeSupported(temp)){
@@ -84,7 +84,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 			if(scope.mediaRecorder.state !== 'recording')
 				return;
 
-			if(e.data.size <= 10) return;
+			if(e.data.size <= 1) return;
 
 			// The audio buffer can contain some duration that causes a noise
 			// So we will need to remove it on streamer side

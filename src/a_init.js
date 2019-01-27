@@ -36,10 +36,16 @@ var ScarletsMedia = {
 };
 
 var ScarletsMediaEffect = {};
-var codecsList = {
-	webm:['opus', 'vp9', 'vp8', 'vorbis'],
-	mp4:['mp4a.67', 'mp4a.40.29', 'mp4a.40.5', 'mp4a.40.2', 'avc1.6e0032', 'avc1.42E01E', 'mp3'],
+var audioCodecs = {
+	webm:['opus', 'vorbis'],
+	mp4:['mp4a.67', 'mp4a.40.29', 'mp4a.40.5', 'mp4a.40.2', 'mp3'],
 	ogg:['opus', 'vorbis'], // This may not work on mobile
+};
+var videoCodecs = {
+	webm:['vp8,opus', 'vp8,vorbis'],
+	mp4:['mp4v.20.8,mp4a.40.2', 'mp4v.20.240,mp4a.40.2', 'avc1.42E01E,mp4a.40.2', 'avc1.58A01E,mp4a.40.2', 'avc1.64001E,mp4a.40.2'],
+	'3gpp':['mp4v.20.8,samr'],
+	ogg:['dirac,vorbis', 'theora,vorbis'], // This may not work on mobile
 };
 
 // Unlock mobile media security
