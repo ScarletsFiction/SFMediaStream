@@ -22,28 +22,27 @@
 		// ===== Presenter =====
 		var presenterMedia = false;
 		function asPresenter(){
-			// Set latency to 100ms (Equal with streamer)
-			presenterMedia = new ScarletsMediaPresenter({
-			    audio:{
-			        channelCount:1,
-			        echoCancellation: false
-			    }
-			}, 100);
+			if(presenterMedia === false){
+				// Set latency to 100ms (Equal with streamer)
+				presenterMedia = new ScarletsMediaPresenter({
+				    audio:{
+				        channelCount:1,
+				        echoCancellation: false
+				    }
+				}, 100);
 
-			presenterMedia.onRecordingReady = function(arrayBuffer){
-			    console.log("Recording started!");
-			    console.log("Header size: " + arrayBuffer.size);
+				presenterMedia.onRecordingReady = function(packet){
+				    console.log("Recording started!");
+				    console.log("Header size: " + packet.data.size);
 
-			    // Every new client streamer must receive this header buffer data
-			    mySocket.emit('bufferHeader', {
-			        data:arrayBuffer,
-			        mimeType:presenterMedia.options.mimeType
-			    });
-			}
+				    // Every new client streamer must receive this header buffer data
+				    mySocket.emit('bufferHeader', packet);
+				}
 
-			presenterMedia.onBufferProcess = function(streamData){
-				debug.value = "Buffer sent: " + streamData[0].size + "bytes";
-			    mySocket.emit('stream', streamData);
+				presenterMedia.onBufferProcess = function(streamData){
+					debug.value = "Buffer sent: " + streamData[0].size + "bytes";
+				    mySocket.emit('stream', streamData);
+				}
 			}
 
 			presenterMedia.startRecording();
@@ -52,21 +51,22 @@
 		// ===== Streamer =====
 		var audioStreamer = false;
 		function asStreamer(){
-			// Set latency to 100ms (Equal with presenter)
-			audioStreamer = new ScarletsAudioBufferStreamer(3, 100, true);
-			audioStreamer.playStream();
+			if(audioStreamer === false){
+				// Set latency to 100ms (Equal with presenter)
+				audioStreamer = new ScarletsAudioBufferStreamer(100);
+				audioStreamer.playStream();
 
-			// Buffer header must be received first
-			mySocket.on('bufferHeader', function(packet){
-				audioStreamer.mimeType = packet.mimeType;
-			    audioStreamer.setBufferHeader(packet.data);
-			});
+				// Buffer header must be received first
+				mySocket.on('bufferHeader', function(packet){
+				    audioStreamer.setBufferHeader(packet);
+				});
 
-			// Receive buffer and play it
-			mySocket.on('stream', function(packet){
-				debug.value = "Buffer received: "+packet[0].byteLength+"bytes";
-			    audioStreamer.realtimeBufferPlay(packet);
-			});
+				// Receive buffer and play it
+				mySocket.on('stream', function(packet){
+					debug.value = "Buffer received: "+packet[0].byteLength+"bytes";
+				    audioStreamer.receiveBuffer(packet);
+				});
+			}
 
 			// Request buffer header
 			mySocket.emit('requestBufferHeader', '');
@@ -80,10 +80,9 @@
 			}
 
 			var ppDelay = ScarletsMediaEffect.pingPongDelay();
-			audioStreamer.outputNode = ScarletsMedia.audioContext.createGain();
 
 			// Stream (source) -> Ping pong delay -> destination
-			audioStreamer.outputNode.connect(ppDelay.input);
+			audioStreamer.connect(ppDelay.input);
 			ppDelay.output.connect(ScarletsMedia.audioContext.destination);
 		}
 	</script>

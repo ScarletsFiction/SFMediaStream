@@ -9,11 +9,7 @@ var ScarletsAudioBufferStreamer = function(chunksDuration){
 
 	scope.debug = false;
 	scope.playing = false;
-	scope.buffering = false;
-	scope.streaming = false;
-	scope.currentDuration = false;
 	scope.latency = 0;
-	scope.realtime = false;
 	scope.mimeType = null;
 	scope.bufferElement = [];
 
@@ -39,6 +35,7 @@ var ScarletsAudioBufferStreamer = function(chunksDuration){
 		scope.outputNode.connect(node);
 		audioNode.connect(node);
 	}
+
 	scope.disconnect = function(){
 		outputNode.disconnect();
 		directAudioOutput = true;
@@ -129,7 +126,7 @@ var ScarletsAudioBufferStreamer = function(chunksDuration){
 	// Play audio immediately after received
 
 	scope.playStream = function(){
-		scope.playing = scope.streaming = scope.buffering = true;
+		scope.playing = true;
 	}
 
 	var bufferElementIndex = 0;
@@ -142,8 +139,6 @@ var ScarletsAudioBufferStreamer = function(chunksDuration){
 
 		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) +
 			chunksSeconds + scope.audioContext.baseLatency;
-
-		scope.realtime = true;
 
 		var index = bufferElementIndex;
 		bufferElementIndex++;
@@ -162,14 +157,12 @@ var ScarletsAudioBufferStreamer = function(chunksDuration){
 	// Play next audio when last audio was finished
 
 	scope.receiveBuffer = function(arrayBuffer){
-		if(scope.playing === false) return;
+		if(scope.playing === false || !mediaBuffer.append) return;
 
 		mediaBuffer.append(arrayBuffer[0]);
 
-		if(audioElement.paused){
-			scope.realtime = false;
+		if(audioElement.paused)
 			audioElement.play();
-		}
 
 		if(chunksDuration){
 			var unplayed = 0;
