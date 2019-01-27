@@ -36,6 +36,11 @@ var ScarletsMedia = {
 };
 
 var ScarletsMediaEffect = {};
+var codecsList = {
+	webm:['opus', 'vp9', 'vp8', 'vorbis'],
+	mp4:['mp4a.67', 'mp4a.40.29', 'mp4a.40.5', 'mp4a.40.2', 'avc1.6e0032', 'avc1.42E01E', 'mp3'],
+	ogg:['opus', 'vorbis'], // This may not work on mobile
+};
 
 // Unlock mobile media security
 (function(){

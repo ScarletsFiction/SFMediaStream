@@ -17,6 +17,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	//};
 
 	scope.debug = false;
+	scope.mediaStream = false;
 
 	scope.onRecordingReady = null;
 	scope.onBufferProcess = null;
@@ -25,59 +26,38 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	scope.recordingReady = false;
 
 	scope.recording = false;
-
 	scope.mediaGranted = false;
 
 	scope.options = {};
-	if(streamInfo.audio && !streamInfo.video){
-		if(MediaRecorder.isTypeSupported('audio/webm;codecs="vp9"'))
-			scope.options.mimeType = 'audio/webm;codecs="vp9"';
-		else if(MediaRecorder.isTypeSupported('audio/webm;codecs="vp8"'))
-			scope.options.mimeType = 'audio/webm;codecs="vp8"';
-		else if(MediaRecorder.isTypeSupported('audio/webm;codecs="vorbis"'))
-			scope.options.mimeType = 'audio/webm;codecs="vorbis"';
-		else if(MediaRecorder.isTypeSupported('audio/webm'))
-			scope.options.mimeType = 'audio/webm';
-		else if(MediaRecorder.isTypeSupported('audio/ogg;codecs="opus"'))
-			scope.options.mimeType = 'audio/ogg;codecs="opus"';
-		else if(MediaRecorder.isTypeSupported('audio/ogg;codecs="vorbis"'))
-			scope.options.mimeType = 'audio/ogg;codecs="vorbis"';
-		else if(MediaRecorder.isTypeSupported('audio/ogg'))
-			scope.options.mimeType = 'audio/ogg';
-		else if(MediaRecorder.isTypeSupported('audio/mp4;codecs="mp4a.40.5'))
-			scope.options.mimeType = 'audio/mp4;codecs="mp4a.40.5';
-		else if(MediaRecorder.isTypeSupported('audio/mp4'))
-			scope.options.mimeType = 'audio/mp4';
-	}
-	else if(!streamInfo.audio && streamInfo.video){
-		if(MediaRecorder.isTypeSupported('video/webm;codecs="vp9"'))
-			scope.options.mimeType = 'video/webm;codecs="vp9"';
-		else if(MediaRecorder.isTypeSupported('video/webm;codecs="vp8"'))
-			scope.options.mimeType = 'video/webm;codecs="vp8"';
-		else if(MediaRecorder.isTypeSupported('video/webm;codecs="vorbis"'))
-			scope.options.mimeType = 'video/webm;codecs="vorbis"';
-		else if(MediaRecorder.isTypeSupported('video/webm'))
-			scope.options.mimeType = 'video/webm';
-		else if(MediaRecorder.isTypeSupported('video/ogg;codecs="opus"'))
-			scope.options.mimeType = 'video/ogg;codecs="opus"';
-		else if(MediaRecorder.isTypeSupported('video/ogg;codecs="vorbis"'))
-			scope.options.mimeType = 'video/ogg;codecs="vorbis"';
-		else if(MediaRecorder.isTypeSupported('video/ogg'))
-			scope.options.mimeType = 'video/ogg';
-		else if(MediaRecorder.isTypeSupported('video/mp4;codecs="mp4a.40.5'))
-			scope.options.mimeType = 'video/mp4;codecs="mp4a.40.5';
-		else if(MediaRecorder.isTypeSupported('video/mp4'))
-			scope.options.mimeType = 'video/mp4';
-	}
-	else{
-		if(MediaRecorder.isTypeSupported('video/webm'))
-			scope.options.mimeType = 'video/webm';
-		else if(MediaRecorder.isTypeSupported('video/mp4'))
-			scope.options.mimeType = 'video/mp4';
+	var mediaType = streamInfo.video ? 'video' : 'audio';
+
+	// Check supported mimeType and codecs for the recorder
+	if(!scope.options.mimeType){
+		var supportedMimeType = false;
+		for(var format in codecsList){
+			var mimeType = mediaType+'/'+format;
+			var codecs = codecsList[format];
+			for (var i = 0; i < codecs.length; i++) {
+				var temp = mimeType+';codecs="'+codecs[i]+'"';
+				if(MediaRecorder.isTypeSupported(temp) && MediaSource.isTypeSupported(temp)){
+					supportedMimeType = temp;
+					break;
+				}
+			}
+
+			if(supportedMimeType === false && MediaRecorder.isTypeSupported(mimeType) && MediaSource.isTypeSupported(mimeType))
+				supportedMimeType = mimeType;
+
+			if(supportedMimeType !== false)
+				break;
+		}
+		scope.options.mimeType = supportedMimeType;
+		console.log("mimeType: "+supportedMimeType);
 	}
 
 	var mediaGranted = function(mediaStream) {
 		scope.mediaGranted = true;
+		scope.mediaStream = mediaStream;
 
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
