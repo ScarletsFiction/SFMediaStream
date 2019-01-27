@@ -88,7 +88,11 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 			bufferHeaderLength = e.data.byteLength;
 
 			if(scope.onRecordingReady)
-				scope.onRecordingReady(scope.bufferHeader);
+				scope.onRecordingReady({
+					mimeType:scope.options.mimeType,
+					startTime:Date.now(),
+					data:scope.bufferHeader
+				});
 			scope.recordingReady = true;
 		};
 
