@@ -157,14 +157,16 @@ ScarletsMedia.extra = new function(){
 if(moduleMode){
 	global.Media = ScarletsMedia;
 	global.MediaEffect = ScarletsMediaEffect;
-	global.AudioBufferStreamer = ScarletsAudioBufferStreamer;
+	global.AudioStreamer = ScarletsAudioStreamer;
+	global.VideoStreamer = ScarletsVideoStreamer;
 	global.MediaPlayer = ScarletsMediaPlayer;
 	global.MediaPresenter = ScarletsMediaPresenter;
 }
 else{
 	global.ScarletsMedia = ScarletsMedia;
 	global.ScarletsMediaEffect = ScarletsMediaEffect;
-	global.ScarletsAudioBufferStreamer = ScarletsAudioBufferStreamer;
+	global.ScarletsAudioStreamer = ScarletsAudioStreamer;
+	global.ScarletsVideoStreamer = ScarletsVideoStreamer;
 	global.ScarletsMediaPlayer = ScarletsMediaPlayer;
 	global.ScarletsMediaPresenter = ScarletsMediaPresenter;
 }
