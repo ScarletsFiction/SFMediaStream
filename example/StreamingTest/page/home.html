@@ -53,7 +53,7 @@
 		function asStreamer(){
 			if(audioStreamer === false){
 				// Set latency to 100ms (Equal with presenter)
-				audioStreamer = new ScarletsAudioBufferStreamer(100);
+				audioStreamer = new ScarletsAudioStreamer(100);
 				audioStreamer.playStream();
 
 				// Buffer header must be received first
