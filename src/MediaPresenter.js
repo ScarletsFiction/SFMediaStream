@@ -12,7 +12,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	//        frameRate:15,
 	//        width: 1280,
 	//        height: 720,
-	//        facingMode: (front? "user" : "environment")
+	//        facingMode: (front ? "user" : "environment")
 	//    }
 	//};
 
@@ -34,9 +34,12 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	// Check supported mimeType and codecs for the recorder
 	if(!scope.options.mimeType){
 		var supportedMimeType = false;
+		var codecsList = mediaType === 'audio' ? audioCodecs : videoCodecs;
+
 		for(var format in codecsList){
 			var mimeType = mediaType+'/'+format;
 			var codecs = codecsList[format];
+			
 			for (var i = 0; i < codecs.length; i++) {
 				var temp = mimeType+';codecs="'+codecs[i]+'"';
 				if(MediaRecorder.isTypeSupported(temp) && MediaSource.isTypeSupported(temp)){
@@ -81,11 +84,13 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 			if(scope.mediaRecorder.state !== 'recording')
 				return;
 
+			if(e.data.size <= 10) return;
+
 			// The audio buffer can contain some duration that causes a noise
 			// So we will need to remove it on streamer side
 			// Because the AudioBuffer can't be converted to ArrayBuffer with WebAudioAPI
 			scope.bufferHeader = e.data;
-			bufferHeaderLength = e.data.byteLength;
+			bufferHeaderLength = e.data.size;
 
 			if(scope.onRecordingReady)
 				scope.onRecordingReady({
