@@ -1,5 +1,5 @@
 // Minimum 3 bufferElement
-var ScarletsAudioBufferStreamer = function(chunksDuration){
+var ScarletsAudioStreamer = function(chunksDuration){
 	var bufferElement = 3;
 
 	if(!chunksDuration) chunksDuration = 1000;
