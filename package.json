@@ -1,12 +1,11 @@
 {
   "name": "sfmediastream",
   "description":"HTML5 media streamer library for playing music, video, playlist, or even live streaming microphone & camera with node server",
-  "version": "0.9.3a",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ScarletsFiction/SFMediaStream.git"
   },
-  "keywords": ["compressed", "browser", "html5", "realtime", "media", "stream", "microphone", "music", "audio", "video", "player"],
   "author": "ScarletsFiction",
   "license": "MIT",
   "bugs": {
@@ -29,5 +28,19 @@
     "gulp-sourcemaps": "*",
     "gulp-uglify-es": "*"
   },
-  "main": "dist/SFMediaStream.min.js"
+  "main": "dist/SFMediaStream.min.js",
+  "keywords": [
+    "browser",
+    "html5",
+    "realtime",
+    "media",
+    "stream",
+    "microphone",
+    "camera",
+    "music",
+    "audio",
+    "video",
+    "effect",
+    "player"
+  ]
 }

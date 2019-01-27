@@ -16,7 +16,7 @@ You can download minified js from this repository or use this CDN link
 And include it on your project
 ```js
 var presenter = new ScarletsMediaPresenter(...);
-var streamer = new ScarletsAudioBufferStreamer(...);
+var streamer = new ScarletsAudioStreamer(...);
 ```
 
 #### Install with NPM
@@ -24,9 +24,9 @@ var streamer = new ScarletsAudioBufferStreamer(...);
 
 And include it on your project
 ```js
-const {MediaPresenter, AudioBufferStreamer, ...} = require('sfmediastream');
+const {MediaPresenter, AudioStreamer, ...} = require('sfmediastream');
 var presenter = new MediaPresenter(...);
-var streamer = new AudioBufferStreamer(...);
+var streamer = new AudioStreamer(...);
 ```
 
 ## How to use
@@ -38,6 +38,8 @@ This class is used for streaming local media like camera or microphone to the se
 | --- | --- |
 | debug | Set to true for outputting any message to browser console |
 | mediaRecorder | Return current `mediaRecorder` that being used |
+| mediaStream | Return current `mediaStream` that being used |
+| mediaGranted | Return true if user granted the recorder |
 | recordingReady | Return true if the recording was ready |
 | recording | Return true if currently recording |
 | options.mimeType | Return mimeType that being used |
@@ -64,15 +66,17 @@ presenterMedia.stopRecording();
 ###### onRecordingReady
 Callback when the library is ready for recording
 ```js
-presenterMedia.onRecordingReady = function(arrayBuffer){
-    console.log("Header size: " + arrayBuffer.byteLength);
+presenterMedia.onRecordingReady = function(packet){
+    console.log("Header size: " + packet.data.size);
+    mySocket.emit('bufferHeader', packet);
 };
 ```
 ###### onBufferProcess
 Callback when data buffer is ready to be played
 ```js
-presenterMedia.onBufferProcess = function(streamData){
-    console.log("Data", streamData);
+presenterMedia.onBufferProcess = function(packet){
+    console.log("Data", packet);
+    mySocket.emit('stream', packet);
 };
 ```
 
@@ -82,51 +86,47 @@ var presenterMedia = new ScarletsMediaPresenter({
     audio:{
         channelCount:1,
         echoCancellation: false
-    }
-}, 1000);
+    },/* video:{
+        frameRate:15,
+        width: 1280,
+        height: 720,
+        facingMode: (frontCamera ? "user" : "environment")
+    } */
+}, 1000); // 1sec
 
-presenterMedia.onRecordingReady = function(arrayBuffer){
+presenterMedia.onRecordingReady = function(packet){
     console.log("Recording started!");
-    console.log("Header size: " + arrayBuffer.byteLength);
+    console.log("Header size: " + packet.data.size + "bytes");
 
-    // Every new client streamer must receive this header buffer data
-    mySocket.emit('bufferHeader', {
-        data:arrayBuffer,
-        mimeType:presenterMedia.options.mimeType
-    });
+    // Every new streamer must receive this header packet
+    mySocket.emit('bufferHeader', packet);
 }
 
-presenterMedia.onBufferProcess = function(streamData){
-    mySocket.emit('stream', {
-        data:streamData
-    });
+presenterMedia.onBufferProcess = function(packet){
+    console.log("Buffer sent: " + packet[0].size + "bytes");
+    mySocket.emit('stream', packet);
 }
 
 presenterMedia.startRecording();
 presenterMedia.stopRecording();
 ```
 
-### ScarletsAudioBufferStreamer
+### ScarletsAudioStreamer
 This class is used for buffering and playing microphone stream from the server.
 
 ```js
-var audioStreamer = new ScarletsAudioBufferStreamer(bufferStorage, chunksDurationInMicroSecond);
+// The minimum duration for audio is ~100ms
+var audioStreamer = new ScarletsAudioStreamer(1000); // 1sec
 ```
 
 #### Properties
 | Property  | Details |
 | --- | --- |
 | debug | Set to true for outputting any message to browser console |
-| currentBuffer | Return index of Selected buffer that will be played |
 | playing | Return true if playing a stream |
-| buffering | Return true if playing a buffer |
-| streaming | Return true when streaming |
-| currentDuration | Return current duration in seconds |
 | latency | Return current latency |
-| realtime | Set to true if you want to instanly play received buffer |
-| bufferSkip | Set this if you want to skip some seconds |
 | mimeType | Return mimeType of current streamed media |
-| webAudio | Set to false for using HTML5 media element |
+| outputNode | Will be available when using `.connect(AudioNode)` |
 
 ```js
 // Example for accessing the properties
@@ -137,45 +137,113 @@ audioStreamer.debug = true;
 ###### playStream
 Set this library to automatically play any received buffer
 ```js
-presenterMedia.playStream();
+audioStreamer.playStream();
 ```
 
 ###### receiveBuffer
-Receive arrayBuffer and play it when ready
+Receive arrayBuffer and play it when last buffer finished playing
 ```js
-presenterMedia.receiveBuffer(arrayBuffer);
+audioStreamer.receiveBuffer(arrayBuffer);
 ```
 
-###### playBuffer(index)
-Play pending buffer
+###### realtimeBufferPlay
+Receive arrayBuffer and immediately play it
 ```js
-// presenterMedia.bufferPending[0]
-presenterMedia.playBuffer(0);
-```
-
-###### playAvailable
-Play available pending buffer
-```js
-presenterMedia.playAvailable();
+audioStreamer.realtimeBufferPlay(arrayBuffer);
 ```
 
 ###### stop
 Stop playing any buffer
 ```js
-presenterMedia.stop();
+audioStreamer.stop();
+```
+
+###### connect
+Connect the streamer to other AudioNode and disable direct output
+```js
+audioStreamer.connect(AudioNode);
+```
+
+###### disconnect
+Disconnect the streamer from any AudioNode and enable direct output
+```js
+audioStreamer.disconnect();
+```
+
+### ScarletsVideoStreamer
+This class is used for buffering and playing microphone & camera stream from the server.
+
+```js
+// Usually the minimum duration for video is 1000ms
+var videoStreamer = new ScarletsVideoStreamer(videoHTML, 1000); // 1sec
+```
+
+#### Properties
+| Property  | Details |
+| --- | --- |
+| debug | Set to true for outputting any message to browser console |
+| playing | Return true if playing a stream |
+| latency | Return current latency |
+| mimeType | Return mimeType of current streamed media |
+| outputNode | Will be available when using `.connect(AudioNode)` |
+
+```js
+// Example for accessing the properties
+videoStreamer.debug = true;
+```
+
+#### Method
+###### playStream
+Set this library to automatically play any received buffer
+```js
+videoStreamer.playStream();
+```
+
+###### receiveBuffer
+Receive arrayBuffer and play it when last buffer finished playing
+```js
+videoStreamer.receiveBuffer(arrayBuffer);
+```
+
+###### stop
+Stop playing any buffer
+```js
+videoStreamer.stop();
+```
+
+###### audioConnect
+Connect the streamer to other AudioNode and disable direct output
+```js
+videoStreamer.audioConnect(AudioNode);
+```
+
+###### audioDisconnect
+Disconnect the streamer from any AudioNode and enable direct output
+```js
+videoStreamer.audioDisconnect();
 ```
 
 #### Example
 ```js
-var audioStreamer = new ScarletsAudioBufferStreamer(3, 1000);
-audioStreamer.playStream();
+var videoStreamer = new ScarletsVideoStreamer(1000); // 1sec
+videoStreamer.playStream();
+
+// First thing that must be received
+mySocket.on('bufferHeader', function(packet){
+    videoStreamer.setBufferHeader(packet);
+});
 
 mySocket.on('stream', function(packet){
-    audioStreamer.realtimeBufferPlay(packet.data);
+    console.log("Buffer received: " + packet[0].byteLength + "bytes");
+    videoStreamer.receiveBuffer(packet);
 });
-mySocket.on('bufferHeader', function(packet){
-    audioStreamer.setBufferHeader(packet.data);
-});
+
+// Add an effect
+var ppDelay = ScarletsMediaEffect.pingPongDelay();
+
+// Stream (source) -> Ping pong delay -> destination
+videoStreamer.audioConnect(ppDelay.input);
+ppDelay.output.connect(ScarletsMedia.audioContext.destination);
 ```
 
 ### ScarletsMediaPlayer
