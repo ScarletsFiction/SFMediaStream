@@ -65,6 +65,7 @@
 				mySocket.on('stream', function(packet){
 					debug.value = "Buffer received: "+packet[0].byteLength+"bytes";
 				    audioStreamer.receiveBuffer(packet);
+				    // audioStreamer.realtimeBufferPlay(packet);
 				});
 			}
 
