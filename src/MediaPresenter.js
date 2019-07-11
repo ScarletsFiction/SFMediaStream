@@ -1,9 +1,9 @@
-// streamInfo = mediaDevices.getUserMedia({thisData})
+// options = mediaDevices.getUserMedia({thisData})
 // latency = 0ms is not possible (minimum is 70ms, or depend on computer performance)
-var ScarletsMediaPresenter = function(streamInfo, latency){
+var ScarletsMediaPresenter = function(options, latency){
 	var scope = this;
 	if(!latency) latency = 1000;
-	//var streamInfo = {
+	//var options = {
 	//    audio:{
 	//        channelCount:1,
 	//        echoCancellation: false
@@ -28,11 +28,18 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	scope.recording = false;
 	scope.mediaGranted = false;
 
-	scope.options = {};
-	var mediaType = streamInfo.video ? 'video' : 'audio';
+	if(options === void 0)
+		options = {};
+
+	scope.debug = options.debug;
+
+	// Deprecated
+	scope.options = options;
+
+	var mediaType = options.video ? 'video' : 'audio';
 
 	// Check supported mimeType and codecs for the recorder
-	if(!scope.options.mimeType){
+	if(!options.mimeType){
 		var supportedMimeType = false;
 		var codecsList = mediaType === 'audio' ? audioCodecs : videoCodecs;
 
@@ -54,7 +61,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 			if(supportedMimeType !== false)
 				break;
 		}
-		scope.options.mimeType = supportedMimeType;
+		options.mimeType = supportedMimeType;
 		console.log("mimeType: "+supportedMimeType);
 	}
 
@@ -65,7 +72,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream, scope.options);
+		scope.mediaRecorder = new MediaRecorder(mediaStream, options);
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -94,7 +101,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 
 			if(scope.onRecordingReady)
 				scope.onRecordingReady({
-					mimeType:scope.options.mimeType,
+					mimeType:options.mimeType,
 					startTime:Date.now(),
 					data:scope.bufferHeader
 				});
@@ -108,7 +115,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	scope.startRecording = function(){
 		if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
-			navigator.mediaDevices.getUserMedia(streamInfo)
+			navigator.mediaDevices.getUserMedia(options)
 				.then(mediaGranted).catch(console.error);
 			return false;
 		}

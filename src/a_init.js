@@ -50,10 +50,10 @@ var videoCodecs = {
 
 // Unlock mobile media security
 (function(){
-	var mobileMediaUnlock = function(e){
-		if(!window.AudioContext) return removeListener();
-		ScarletsMedia.audioContext = new AudioContext();
+	if(!window.AudioContext) return console.error("`AudioContext` was not available");
+	ScarletsMedia.audioContext = new AudioContext();
 
+	var mobileMediaUnlock = function(e){
 		var emptyBuffer = ScarletsMedia.audioContext.createBuffer(1, 1, 22050);
 		var source = ScarletsMedia.audioContext.createBufferSource();
 		source.buffer = emptyBuffer;

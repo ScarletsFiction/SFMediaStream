@@ -4,19 +4,21 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 	scope.objectURL = URL.createObjectURL(scope.source);
 
 	var sourceBuffer = null;
-	scope.source.addEventListener('sourceopen', function(){
+	scope.source.onsourceopen = function(){
 		sourceBuffer = scope.source.addSourceBuffer(mimeType);
 		sourceBuffer.mode = 'sequence';
 		sourceBuffer.appendBuffer(bufferHeader);
-	}, {once:true});
+	};
 
 	var removing = false;
-	scope.source.addEventListener('updateend', function(){
+	scope.source.onupdateend = function(){
 		if(removing === false) return;
 
 		removing = false;
 		sourceBuffer.remove(0, 10);
-	});
+	};
+
+	scope.source.onerror = console.error;
 
 	var totalTime = 0;
 	scope.append = function(arrayBuffer){
