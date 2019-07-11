@@ -50,6 +50,7 @@ var ScarletsMediaPlayer = function(element){
 
 	self.preload = true;
 	element.preload = 'metadata';
+	element.crossorigin = 'anonymous';
 	self.audioFadeEffect = true;
 
 	self.speed = function(set){

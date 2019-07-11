@@ -50,10 +50,10 @@ var videoCodecs = {
 
 // Unlock mobile media security
 (function(){
-	var mobileMediaUnlock = function(e){
-		if(!window.AudioContext) return removeListener();
-		ScarletsMedia.audioContext = new AudioContext();
+	if(!window.AudioContext) return console.error("`AudioContext` was not available");
+	ScarletsMedia.audioContext = new AudioContext();
 
+	var mobileMediaUnlock = function(e){
 		var emptyBuffer = ScarletsMedia.audioContext.createBuffer(1, 1, 22050);
 		var source = ScarletsMedia.audioContext.createBufferSource();
 		source.buffer = emptyBuffer;
@@ -312,19 +312,21 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 	scope.objectURL = URL.createObjectURL(scope.source);
 
 	var sourceBuffer = null;
-	scope.source.addEventListener('sourceopen', function(){
+	scope.source.onsourceopen = function(){
 		sourceBuffer = scope.source.addSourceBuffer(mimeType);
 		sourceBuffer.mode = 'sequence';
 		sourceBuffer.appendBuffer(bufferHeader);
-	}, {once:true});
+	};
 
 	var removing = false;
-	scope.source.addEventListener('updateend', function(){
+	scope.source.onupdateend = function(){
 		if(removing === false) return;
 
 		removing = false;
 		sourceBuffer.remove(0, 10);
-	});
+	};
+
+	scope.source.onerror = console.error;
 
 	var totalTime = 0;
 	scope.append = function(arrayBuffer){
@@ -399,6 +401,7 @@ var ScarletsMediaPlayer = function(element){
 
 	self.preload = true;
 	element.preload = 'metadata';
+	element.crossorigin = 'anonymous';
 	self.audioFadeEffect = true;
 
 	self.speed = function(set){
@@ -638,12 +641,12 @@ var ScarletsMediaPlayer = function(element){
 		}
 	};
 }
-// streamInfo = mediaDevices.getUserMedia({thisData})
+// options = mediaDevices.getUserMedia({thisData})
 // latency = 0ms is not possible (minimum is 70ms, or depend on computer performance)
-var ScarletsMediaPresenter = function(streamInfo, latency){
+var ScarletsMediaPresenter = function(options, latency){
 	var scope = this;
 	if(!latency) latency = 1000;
-	//var streamInfo = {
+	//var options = {
 	//    audio:{
 	//        channelCount:1,
 	//        echoCancellation: false
@@ -668,11 +671,18 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	scope.recording = false;
 	scope.mediaGranted = false;
 
-	scope.options = {};
-	var mediaType = streamInfo.video ? 'video' : 'audio';
+	if(options === void 0)
+		options = {};
+
+	scope.debug = options.debug;
+
+	// Deprecated
+	scope.options = options;
+
+	var mediaType = options.video ? 'video' : 'audio';
 
 	// Check supported mimeType and codecs for the recorder
-	if(!scope.options.mimeType){
+	if(!options.mimeType){
 		var supportedMimeType = false;
 		var codecsList = mediaType === 'audio' ? audioCodecs : videoCodecs;
 
@@ -694,7 +704,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 			if(supportedMimeType !== false)
 				break;
 		}
-		scope.options.mimeType = supportedMimeType;
+		options.mimeType = supportedMimeType;
 		console.log("mimeType: "+supportedMimeType);
 	}
 
@@ -705,7 +715,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream, scope.options);
+		scope.mediaRecorder = new MediaRecorder(mediaStream, options);
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -734,7 +744,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 
 			if(scope.onRecordingReady)
 				scope.onRecordingReady({
-					mimeType:scope.options.mimeType,
+					mimeType:options.mimeType,
 					startTime:Date.now(),
 					data:scope.bufferHeader
 				});
@@ -748,7 +758,7 @@ var ScarletsMediaPresenter = function(streamInfo, latency){
 	scope.startRecording = function(){
 		if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
-			navigator.mediaDevices.getUserMedia(streamInfo)
+			navigator.mediaDevices.getUserMedia(options)
 				.then(mediaGranted).catch(console.error);
 			return false;
 		}
@@ -1487,7 +1497,7 @@ ScarletsMediaEffect.harmonizer = function(sourceNode){
 	// sample
 	// noise x0.25 -> harmonizer -> reverb x0.85
 };
-ScarletsMediaEffect.noise = function(){
+ScarletsMediaEffect.noise = function(sourceNode){
 	var context = ScarletsMedia.audioContext;
 	var output = context.createGain();
 	var input = sourceNode === undefined ? context.createGain() : null;
@@ -1535,6 +1545,7 @@ ScarletsMediaEffect.noise = function(){
 		}
 	};
 };
+
 ScarletsMediaEffect.pingPongDelay = function(sourceNode){
 	var context = ScarletsMedia.audioContext;
 	var output = context.createGain();

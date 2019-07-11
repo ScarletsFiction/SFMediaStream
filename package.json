@@ -1,7 +1,7 @@
 {
   "name": "sfmediastream",
   "description":"HTML5 media streamer library for playing music, video, playlist, or even live streaming microphone & camera with node server",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ScarletsFiction/SFMediaStream.git"
