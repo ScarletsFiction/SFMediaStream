@@ -69,9 +69,9 @@ var ScarletsMediaPlayer = function(element){
 		element.volume = volume = set;
 	}
 
-	self.play = function(callback){
+	self.play = function(successCallback, errorCallback){
 		if(!element.paused){
-			if(callback) callback();
+			if(successCallback) successCallback();
 			return;
 		}
 		if(self.audioFadeEffect){
@@ -79,11 +79,16 @@ var ScarletsMediaPlayer = function(element){
 			element.play();
 			ScarletsMedia.extra.fadeNumber(0, volume, 0.02, 400, function(num){
 				element.volume = num;
-			}, callback);
+			}, successCallback);
 			return;
 		}
-		element.play();
-		if(callback) callback();
+
+		element.play().then(function(){
+			if(successCallback) successCallback();
+		}).catch(function(e){
+			console.error(e);
+			if(errorCallback) errorCallback();
+		});
 	}
 
 	self.pause = function(callback){
@@ -116,19 +121,25 @@ var ScarletsMediaPlayer = function(element){
 			temp[i].remove();
 		}
 
+		if(self.preload && callback)
+			self.once('canplay', callback);
+
 		if(typeof links === 'string')
-			element.insertAdjacentHTML('beforeend', `<source src="${links}"/>`);
+			element.insertAdjacentHTML('beforeend', `<source src="${links.split('"').join('\\"')}"/>`);
 		else{
 			temp = '';
 			for (var i = 0; i < links.length; i++) {
-				temp += `<source src="${links[i]}"/>`;
+				temp += `<source src="${links[i].split('"').join('\\"')}"/>`;
 			}
 			element.insertAdjacentHTML('beforeend', temp);
 		}
 
 		// Preload data
-		if(self.preload) element.load();
-		if(callback) callback();
+		if(self.preload)
+			element.load();
+
+		else if(callback)
+			callback();
 	}
 
 	var eventRegistered = {};
