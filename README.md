@@ -1,4 +1,4 @@
-<a href="https://www.patreon.com/stefansarya"><img src="http://anisics.stream/assets/img/support-badge.png" height="20"></a>
+<a href='https://patreon.com/stefansarya'><img src='https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.herokuapp.com%2Fstefansarya%2Fpledges&style=for-the-badge' height='20'></a>
 
 [![Written by](https://img.shields.io/badge/Written%20by-ScarletsFiction-%231e87ff.svg)](LICENSE)
 [![Software License](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)
@@ -537,7 +537,14 @@ mediaPlayer.playlist.shuffle(true || false);
 ## Contribution
 If you want to help in SFMediaStream please fork this project and edit on your repository, then make a pull request to here. Otherwise, you can help with donation via [patreon](https://www.patreon.com/stefansarya).
 
-Keep the code simple and clear.
+### Compile from source
+After you downloaded this repo you need to install some devDependencies.
+```sh
+$ npm i
+$ gulp watch
+```
+
+After you make some changes on `/src` it will automatically compile into `/dist/SFMediaStream.js`. Make sure you cleared your cache when doing some experiment.
 
 ## License
 SFMediaStream is under the MIT license.

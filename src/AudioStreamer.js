@@ -137,8 +137,7 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		if(arrayBuffer[0].byteLength === 0) return;
 		arrayBuffer = arrayBuffer[0];
 
-		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) +
-			chunksSeconds + scope.audioContext.baseLatency;
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + chunksSeconds + scope.audioContext.baseLatency;
 
 		var index = bufferElementIndex;
 		bufferElementIndex++;
@@ -164,10 +163,7 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		if(audioElement.paused)
 			audioElement.play();
 
-		if(chunksDuration){
-			var unplayed = 0;
-			scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + unplayed +  scope.audioContext.baseLatency;
-			if(scope.debug) console.log("Total latency: "+scope.latency);
-		}
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) +  scope.audioContext.baseLatency + chunksSeconds;
+		if(scope.debug) console.log("Total latency: "+scope.latency);
 	}
 }

@@ -13,7 +13,9 @@
 	<button onclick="asStreamer()">Streamer</button>
 	<button onclick="streamerEffect()">Effect (for streamer)</button>
 	<input type="text" id="debug"><br>
-	Presenter must be online before the streamer. <a href="/video">try with video</a>
+	Presenter must be online before the streamer. <a href="/">try only audio</a>
+	<br>
+	<video id="myVideoElement"></video>
 
 	<script type="text/javascript">
 		var mySocket = io("/", {transports:['websocket']});
@@ -23,14 +25,20 @@
 		var presenterMedia = false;
 		function asPresenter(){
 			if(presenterMedia === false){
-				// Set latency to 100ms (Equal with streamer)
+				// Set latency to 2000ms (Equal with streamer)
 				presenterMedia = new ScarletsMediaPresenter({
 				    audio:{
 				        channelCount:1,
 				        echoCancellation: false
 				    },
+				    video:{
+						frameRate:15,
+						width: 320,
+						height: 240,
+						// facingMode: (front ? "user" : "environment")
+					},
 				    debug:true
-				}, 100);
+				}, 2000);
 
 				presenterMedia.onRecordingReady = function(packet){
 				    console.log("Recording started!");
@@ -50,23 +58,22 @@
 		}
 
 		// ===== Streamer =====
-		var audioStreamer = false;
+		var videoStreamer = false;
 		function asStreamer(){
-			if(audioStreamer === false){
-				// Set latency to 100ms (Equal with presenter)
-				audioStreamer = new ScarletsAudioStreamer(100);
-				audioStreamer.playStream();
+			if(videoStreamer === false){
+				// Set latency to 2000ms (Equal with presenter)
+				videoStreamer = new ScarletsVideoStreamer(myVideoElement, 2000);
+				videoStreamer.playStream();
 
 				// Buffer header must be received first
 				mySocket.on('bufferHeader', function(packet){
-				    audioStreamer.setBufferHeader(packet);
+				    videoStreamer.setBufferHeader(packet);
 				});
 
 				// Receive buffer and play it
 				mySocket.on('stream', function(packet){
 					debug.value = "Buffer received: "+packet[0].byteLength+"bytes";
-				    audioStreamer.receiveBuffer(packet);
-				    // audioStreamer.realtimeBufferPlay(packet);
+				    videoStreamer.receiveBuffer(packet);
 				});
 			}
 
@@ -76,7 +83,7 @@
 
 		// ===== Streamer Audio Effect =====
 		function streamerEffect(){
-			if(audioStreamer === false){
+			if(videoStreamer === false){
 				console.error("Streamer haven't been initialized");
 				return;
 			}
@@ -84,7 +91,7 @@
 			var ppDelay = ScarletsMediaEffect.pingPongDelay();
 
 			// Stream (source) -> Ping pong delay -> destination
-			audioStreamer.connect(ppDelay.input);
+			videoStreamer.audioConnect(ppDelay.input);
 			ppDelay.output.connect(ScarletsMedia.audioContext.destination);
 		}
 	</script>

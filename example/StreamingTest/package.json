@@ -1,8 +1,19 @@
 {
   "name": "streaming-test",
   "license":"MIT",
+  "scripts":{
+    "server":"node server.js"
+  },
   "dependencies": {
     "socket.io": "*",
     "serberries": "*"
+  },
+  "speaker.js#dependencies": {
+    "socket.io": "*",
+    "serberries": "*",
+    "speaker": "*",
+    "node-opus": "*",
+    "stream": "*",
+    "ogg": "*"
   }
 }

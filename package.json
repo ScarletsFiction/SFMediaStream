@@ -1,7 +1,7 @@
 {
   "name": "sfmediastream",
   "description":"HTML5 media streamer library for playing music, video, playlist, or even live streaming microphone & camera with node server",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/ScarletsFiction/SFMediaStream.git"
@@ -11,6 +11,9 @@
   "bugs": {
     "url": "https://github.com/ScarletsFiction/SFMediaStream/issues"
   },
+  "scripts":{
+    "watch":"gulp watch"
+  },
   "browserslist": [
     "Android > 4",
     "IOS >= 7",
@@ -18,15 +21,21 @@
     "ie >= 10"
   ],
   "devDependencies": {
-    "gulp": "*",
-    "gulp-babel": "*",
-    "gulp-header": "*",
-    "browser-sync": "*",
-    "gulp-concat": "*",
     "gulp-order": "*",
     "gulp-rename": "*",
-    "gulp-sourcemaps": "*",
-    "gulp-uglify-es": "*"
+    "gulp": "^4.0.0",
+    "gulp-autoprefixer": "^6.0.0",
+    "gulp-babel": "^8.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-csso": "^3.0.1",
+    "gulp-header": "^2.0.7",
+    "gulp-html-to-js": "^0.0.7",
+    "gulp-sass": "^4.0.2",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-stylus": "^2.7.0",
+    "gulp-uglify-es": "^1.0.4",
+    "@babel/core": "^7.7.2",
+    "@babel/preset-env": "^7.7.1"
   },
   "main": "dist/SFMediaStream.min.js",
   "keywords": [

@@ -1,9 +1,10 @@
 var Serberries = require('serberries');
 var SocketIO = require('socket.io');
+// var Speaker = require('./speaker.js');
 
 // Initialize minimal server
 var myserver = new Serberries({
-    path:__dirname+'/logic'
+    path:__dirname+'/router'
 });
 
 myserver.setPublicFolder("../../dist");
@@ -38,16 +39,20 @@ var bufferHeader = null;
 
 // Event listener
 io.on('connection', function(socket){
+    var speaker = null;
+
     /* Presenter */
     socket.on('bufferHeader', function(packet){
         // Buffer header can be saved on server so it can be passed to new user
         bufferHeader = packet;
         socket.broadcast.emit('bufferHeader', packet);
+        // speaker = Speaker(packet.data);
     });
 
     // Broadcast the received buffer
     socket.on('stream', function(packet){
         socket.broadcast.emit('stream', packet);
+        // speaker.writeFile([packet[0], ...another packet[0]...]);
     });
 
     // Send buffer header to new user
