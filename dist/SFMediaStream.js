@@ -221,8 +221,7 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		if(arrayBuffer[0].byteLength === 0) return;
 		arrayBuffer = arrayBuffer[0];
 
-		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) +
-			chunksSeconds + scope.audioContext.baseLatency;
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + chunksSeconds + scope.audioContext.baseLatency;
 
 		var index = bufferElementIndex;
 		bufferElementIndex++;
@@ -248,11 +247,8 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		if(audioElement.paused)
 			audioElement.play();
 
-		if(chunksDuration){
-			var unplayed = 0;
-			scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + unplayed +  scope.audioContext.baseLatency;
-			if(scope.debug) console.log("Total latency: "+scope.latency);
-		}
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) +  scope.audioContext.baseLatency + chunksSeconds;
+		if(scope.debug) console.log("Total latency: "+scope.latency);
 	}
 }
 ScarletsMedia.convert = {
@@ -311,29 +307,39 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 	scope.source = new MediaSource();
 	scope.objectURL = URL.createObjectURL(scope.source);
 
+	var removing = false;
+	var totalTime = 0;
+	var removeCount = 10;
+
 	var sourceBuffer = null;
 	scope.source.onsourceopen = function(){
 		sourceBuffer = scope.source.addSourceBuffer(mimeType);
 		sourceBuffer.mode = 'sequence';
 		sourceBuffer.appendBuffer(bufferHeader);
-	};
 
-	var removing = false;
-	scope.source.onupdateend = function(){
-		if(removing === false) return;
+		sourceBuffer.onupdateend = function(){
+			if(removing === false) return;
 
-		removing = false;
-		sourceBuffer.remove(0, 10);
+			removing = false;
+			totalTime = 0;
+			sourceBuffer.remove(0, removeCount);
+			removeCount = 20;
+		};
+		sourceBuffer.onerror = console.error;
 	};
 
 	scope.source.onerror = console.error;
 
-	var totalTime = 0;
 	scope.append = function(arrayBuffer){
-		if(sourceBuffer === null) return false;
+		if(sourceBuffer === null)
+			return false;
+
+		if(sourceBuffer.buffered.length === 2)
+			console.log('something wrong');
 
 		sourceBuffer.appendBuffer(arrayBuffer);
 		totalTime += chunksDuration;
+		// console.log(totalTime, arrayBuffer);
 
 		if(totalTime >= 20000)
 			removing = true;
@@ -420,9 +426,9 @@ var ScarletsMediaPlayer = function(element){
 		element.volume = volume = set;
 	}
 
-	self.play = function(callback){
+	self.play = function(successCallback, errorCallback){
 		if(!element.paused){
-			if(callback) callback();
+			if(successCallback) successCallback();
 			return;
 		}
 		if(self.audioFadeEffect){
@@ -430,11 +436,16 @@ var ScarletsMediaPlayer = function(element){
 			element.play();
 			ScarletsMedia.extra.fadeNumber(0, volume, 0.02, 400, function(num){
 				element.volume = num;
-			}, callback);
+			}, successCallback);
 			return;
 		}
-		element.play();
-		if(callback) callback();
+
+		element.play().then(function(){
+			if(successCallback) successCallback();
+		}).catch(function(e){
+			console.error(e);
+			if(errorCallback) errorCallback();
+		});
 	}
 
 	self.pause = function(callback){
@@ -467,19 +478,25 @@ var ScarletsMediaPlayer = function(element){
 			temp[i].remove();
 		}
 
+		if(self.preload && callback)
+			self.once('canplay', callback);
+
 		if(typeof links === 'string')
-			element.insertAdjacentHTML('beforeend', `<source src="${links}"/>`);
+			element.insertAdjacentHTML('beforeend', `<source src="${links.split('"').join('\\"')}"/>`);
 		else{
 			temp = '';
 			for (var i = 0; i < links.length; i++) {
-				temp += `<source src="${links[i]}"/>`;
+				temp += `<source src="${links[i].split('"').join('\\"')}"/>`;
 			}
 			element.insertAdjacentHTML('beforeend', temp);
 		}
 
 		// Preload data
-		if(self.preload) element.load();
-		if(callback) callback();
+		if(self.preload)
+			element.load();
+
+		else if(callback)
+			callback();
 	}
 
 	var eventRegistered = {};
@@ -2109,7 +2126,7 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 	}
 
 	scope.setBufferHeader = function(packet){
-		if(!packet.data)
+		if(!packet || !packet.data)
 			return;
 
 		var arrayBuffer = packet.data;
@@ -2121,6 +2138,7 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 
 		mediaBuffer = new MediaBuffer(scope.mimeType, chunksDuration, arrayBuffer);
 
+		console.log(mediaBuffer);
 		videoElement.src = scope.objectURL = mediaBuffer.objectURL;
 	}
 
@@ -2136,11 +2154,8 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 		if(videoElement.paused)
 			videoElement.play();
 
-		if(chunksDuration){
-			var unplayed = 0;
-			scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + unplayed +  scope.audioContext.baseLatency;
-			if(scope.debug) console.log("Total latency: "+scope.latency);
-		}
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + scope.audioContext.baseLatency + chunksSeconds;
+		if(scope.debug) console.log("Total latency: "+scope.latency);
 	}
 }
 ScarletsMedia.extra = new function(){
