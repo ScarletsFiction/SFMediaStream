@@ -261,7 +261,6 @@ var mediaPlayer = new ScarletsMediaPlayer(document.querySelector('audio'));
 | loop | Sets or returns whether the audio/video should start over again when finished |
 | buffered | Returns a TimeRanges object representing the buffered parts of the audio/video |
 | preload | Sets or returns whether the audio/video should be loaded when the page loads ("none", "metadata", "auto") |
-| buffered | Returns a TimeRanges object representing the buffered parts of the audio/video |
 | controller | Returns the MediaController object representing the current media controller of the audio/video |
 | currentTime | Sets or returns the current playback position in the audio/video (in seconds) |
 | currentSrc | Returns the URL of the current audio/video |

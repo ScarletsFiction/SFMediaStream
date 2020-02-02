@@ -426,6 +426,15 @@ var ScarletsMediaPlayer = function(element){
 		element.volume = volume = set;
 	}
 
+	function play(successCallback, errorCallback){
+		element.play().then(function(){
+			if(successCallback) successCallback();
+		}).catch(function(e){
+			if(errorCallback) errorCallback(e);
+			else console.error(e);
+		});
+	}
+
 	self.play = function(successCallback, errorCallback){
 		if(!element.paused){
 			if(successCallback) successCallback();
@@ -433,19 +442,14 @@ var ScarletsMediaPlayer = function(element){
 		}
 		if(self.audioFadeEffect){
 			element.volume = 0;
-			element.play();
+			play(successCallback, errorCallback);
 			ScarletsMedia.extra.fadeNumber(0, volume, 0.02, 400, function(num){
 				element.volume = num;
 			}, successCallback);
 			return;
 		}
 
-		element.play().then(function(){
-			if(successCallback) successCallback();
-		}).catch(function(e){
-			console.error(e);
-			if(errorCallback) errorCallback();
-		});
+		play(successCallback, errorCallback);
 	}
 
 	self.pause = function(callback){
@@ -478,8 +482,12 @@ var ScarletsMediaPlayer = function(element){
 			temp[i].remove();
 		}
 
-		if(self.preload && callback)
+		if(self.preload && callback){
 			self.once('canplay', callback);
+			self.once('error', function(){
+				self.off('canplay', callback);
+			});
+		}
 
 		if(typeof links === 'string')
 			element.insertAdjacentHTML('beforeend', `<source src="${links.split('"').join('\\"')}"/>`);
@@ -519,8 +527,10 @@ var ScarletsMediaPlayer = function(element){
 
 	self.off = function(eventName, callback){
 		var name = eventName.toLowerCase();
-		if(eventRegistered[name] === undefined)
+		if(eventRegistered[name] === undefined){
+			element.removeEventListener(eventName, callback, true);
 			return;
+		}
 
 		if(!callback)
 			eventRegistered[name].splice(0);
