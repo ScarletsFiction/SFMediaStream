@@ -69,12 +69,27 @@ var ScarletsMediaPlayer = function(element){
 		element.volume = volume = set;
 	}
 
+	var stillWaiting = false;
 	function play(successCallback, errorCallback){
 		element.play().then(function(){
+			stillWaiting = false;
 			if(successCallback) successCallback();
 		}).catch(function(e){
 			if(errorCallback) errorCallback(e);
-			else console.error(e);
+			else{
+				// If user haven't interacted with the page
+				// and media play was requested, let's pending it
+				if(userInteracted === false){
+					if(stillWaiting === false){
+						waitingUnlock.push(function(){
+							play(successCallback, errorCallback);
+						});
+					}
+					return;
+				}
+
+				console.error(e);
+			}
 		});
 	}
 

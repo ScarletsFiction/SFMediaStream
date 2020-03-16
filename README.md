@@ -11,7 +11,7 @@ The default configuration is intended for newer browser. If you want to build 2-
 
 ## Install with CDN link
 You can download minified js from this repository or use this CDN link
-`<script type="text/javascript" src='https://unpkg.com/sfmediastream@latest/dist/SFMediaStream.min.js'></script>`
+`<script type="text/javascript" src='https://cdn.jsdelivr.net/npm/sfmediastream@latest'></script>`
 
 And include it on your project
 ```js

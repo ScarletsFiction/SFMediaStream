@@ -48,6 +48,9 @@ var videoCodecs = {
 	ogg:['dirac,vorbis', 'theora,vorbis'], // This may not work on mobile
 };
 
+var waitingUnlock = [];
+var userInteracted = false;
+
 // Unlock mobile media security
 (function(){
 	if(!window.AudioContext) return console.error("`AudioContext` was not available");
@@ -76,6 +79,12 @@ var videoCodecs = {
 		document.removeEventListener('touchstart', mobileMediaUnlock, true);
 		document.removeEventListener('touchend', mobileMediaUnlock, true);
 		document.removeEventListener('click', mobileMediaUnlock, true);
+
+		for (var i = 0; i < waitingUnlock.length; i++) {
+			waitingUnlock[i]();
+		}
+
+		waitingUnlock.length = 0;
 	}
 
 	document.addEventListener('touchstart', mobileMediaUnlock, true);
