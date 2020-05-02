@@ -48,6 +48,9 @@ var videoCodecs = {
 	ogg:['dirac,vorbis', 'theora,vorbis'], // This may not work on mobile
 };
 
+var waitingUnlock = [];
+var userInteracted = false;
+
 // Unlock mobile media security
 (function(){
 	if(!window.AudioContext) return console.error("`AudioContext` was not available");
@@ -76,6 +79,12 @@ var videoCodecs = {
 		document.removeEventListener('touchstart', mobileMediaUnlock, true);
 		document.removeEventListener('touchend', mobileMediaUnlock, true);
 		document.removeEventListener('click', mobileMediaUnlock, true);
+
+		for (var i = 0; i < waitingUnlock.length; i++) {
+			waitingUnlock[i]();
+		}
+
+		waitingUnlock.length = 0;
 	}
 
 	document.addEventListener('touchstart', mobileMediaUnlock, true);
@@ -361,6 +370,17 @@ var ScarletsMediaPlayer = function(element){
 	// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
 	var self = this;
 
+	if(element === void 0)
+		element = 'audio';
+
+	if(element.constructor === String){
+		if(element !== 'audio' && element !== 'video')
+			return console.error('Supported player is "audio" or "video"');
+
+		element = document.createElement(element);
+		document.body.appendChild(element);
+	}
+
 	var propertyLinker = ['autoplay', 'loop', 'buffered', 'buffered', 'controller', 'currentTime', 'currentSrc', 'duration', 'ended', 'error', 'readyState', 'networkState', 'paused', 'played', 'seekable', 'seeking'];
 
 	// Get element audio for output node
@@ -426,12 +446,27 @@ var ScarletsMediaPlayer = function(element){
 		element.volume = volume = set;
 	}
 
+	var stillWaiting = false;
 	function play(successCallback, errorCallback){
 		element.play().then(function(){
+			stillWaiting = false;
 			if(successCallback) successCallback();
 		}).catch(function(e){
 			if(errorCallback) errorCallback(e);
-			else console.error(e);
+			else{
+				// If user haven't interacted with the page
+				// and media play was requested, let's pending it
+				if(userInteracted === false){
+					if(stillWaiting === false){
+						waitingUnlock.push(function(){
+							play(successCallback, errorCallback);
+						});
+					}
+					return;
+				}
+
+				console.error(e);
+			}
 		});
 	}
 

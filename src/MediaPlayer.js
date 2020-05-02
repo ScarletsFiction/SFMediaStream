@@ -4,6 +4,17 @@ var ScarletsMediaPlayer = function(element){
 	// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
 	var self = this;
 
+	if(element === void 0)
+		element = 'audio';
+
+	if(element.constructor === String){
+		if(element !== 'audio' && element !== 'video')
+			return console.error('Supported player is "audio" or "video"');
+
+		element = document.createElement(element);
+		document.body.appendChild(element);
+	}
+
 	var propertyLinker = ['autoplay', 'loop', 'buffered', 'buffered', 'controller', 'currentTime', 'currentSrc', 'duration', 'ended', 'error', 'readyState', 'networkState', 'paused', 'played', 'seekable', 'seeking'];
 
 	// Get element audio for output node
