@@ -1,9 +1,10 @@
 var stream = require('stream');
 var speaker = require('speaker');
 var fs = require('fs');
-const { OpusEncoder } = require('@discordjs/opus');
 
-const opus = new OpusEncoder(48000, 2);
+// const { OpusEncoder } = require('@discordjs/opus');
+// var opus = new OpusEncoder(48000, 2);
+
 speaker = new speaker({
     channels: 2,
     sampleRate: 48000
@@ -20,8 +21,8 @@ module.exports = {
         if(!headerBuffer)
             return console.error("BufferHeader haven't been set");
 
-        var buffer = opus.decode(chunk, 480);
-        speaker.write(buffer);
+        // var buffer = opus.decode(chunk, 480);
+        speaker.write(chunk);
     },
     writeFile:function(buffer){
         if(!headerBuffer)

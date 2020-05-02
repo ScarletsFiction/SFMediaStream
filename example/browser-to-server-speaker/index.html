@@ -16,6 +16,12 @@
 	<!-- ScarletsFrame -->
 	<script src='https://cdn.jsdelivr.net/npm/scarletsframe@latest/dist/scarletsframe.min.js'></script>
 
+	<!-- load OpusMediaRecorder.umd.js. OpusMediaRecorder will be loaded. -->
+	<script src="https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/OpusMediaRecorder.umd.js"></script>
+	<!-- load encoderWorker.umd.js. This should be after OpusMediaRecorder. -->
+	<!-- This script tag will create OpusMediaRecorder.encoderWorker. -->
+	<script src="https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/encoderWorker.umd.js"></script>
+
 	<!-- SFMediaStream -->
 	<script src="/dist/SFMediaStream.js"></script>
 </head>

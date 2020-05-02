@@ -2,6 +2,9 @@
 var presenter = false;
 var presenterInstance = null;
 
+// Backup browser's MediaRecorder
+window.NativeMediaRecorder = window.MediaRecorder;
+
 // Scope for <sf-m name="presenter">
 sf.model('presenter', function(self){
 	presenter = self;
@@ -11,20 +14,23 @@ sf.model('presenter', function(self){
 	self.bufferHeader = null;
 	self.toServerSpeaker = false;
 
-	self.init = function(){
-		app.debug("Stream will be saved in ./test.webm");
-	}
-
 	// Start recording, or create instance first
 	self.start = function(){
-		if(!presenterInstance)
+		if(!presenterInstance){
+			if(!self.toServerSpeaker)
+				app.debug("Stream will be saved in ./test.webm");
+
 			createInstance();
+		}
 
 		presenterInstance.startRecording();
 	}
 
 	self.stop = function(){
 		presenterInstance.stopRecording();
+		delete presenterInstance.onBufferProcess;
+
+		presenterInstance = null;
 		socket.emit('endFile');
 	}
 
@@ -32,8 +38,22 @@ sf.model('presenter', function(self){
 		self.toServerSpeaker = !self.toServerSpeaker;
 
 		// Send signal to end file writing to the server
-		if(self.toServerSpeaker && self.bufferHeader)
-			socket.emit('endFile');
+		if(self.toServerSpeaker && self.bufferHeader){
+			// To stream to server speaker we must use WAV
+			window.MediaRecorder = OpusMediaRecorder;
+
+			self.stop();
+
+			// Create new instance, with audio/wav mimeType
+			self.start();
+		}
+		else{
+			window.MediaRecorder = NativeMediaRecorder;
+
+			// Stop and create new instance, with audio/webm mimeType
+			self.stop();
+			self.start();
+		}
 	}
 
 	// We just need to create this once, and save the bufferHeader
@@ -42,13 +62,14 @@ sf.model('presenter', function(self){
 
 		// Set latency to 100ms (Equal with streamer)
 		presenterInstance = new ScarletsMediaPresenter({
+			mimeType: self.toServerSpeaker ? 'audio/wav' : undefined,
 		    audio:{
-		        channelCount:1,
-		        sampleRate:44100,
+		        channelCount:2,
+		        sampleRate:48000,
 		        echoCancellation: false
 		    },
 		    debug:true
-		}, 100);
+		}, self.toServerSpeaker ? 1000 : 100);
 
 		presenterInstance.onRecordingReady = function(packet){
 		    app.debug("Recording started!");
