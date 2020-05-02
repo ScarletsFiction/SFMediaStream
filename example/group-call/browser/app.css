@@ -1,0 +1,47 @@
+body{
+	background: #383838;
+	color: white;
+}
+
+sf-m{
+	display: block;
+}
+
+.gray-text{
+    text-align: center;
+    display: block;
+    color: gray;
+}
+
+.gray-text span{
+    color: darkgray;
+    font-weight: bold;
+}
+
+.little-space{
+	margin-top: 20px;
+}
+
+textarea.form-control{
+	height: 80px;
+}
+
+.app-info{
+    text-align: center;
+    margin-top: 30px;
+    line-height: 40px;
+    border-top: 2px dashed white;
+}
+
+.center{
+	margin: 0 auto;
+}
+
+.presenter-status-text{
+	text-align: center;
+	width: 100%;
+}
+
+.presenter-list{
+	width: 100%;
+}

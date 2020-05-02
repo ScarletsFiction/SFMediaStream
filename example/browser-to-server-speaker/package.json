@@ -1,0 +1,14 @@
+{
+  "name": "streaming-test",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.2.1",
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0",
+    "speaker": "^0.5.1",
+    "stream": "^0.0.2"
+  }
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+	<title>Streaming Test</title>
+
+	<!-- Google Fonts -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+	<!-- Bootstrap core CSS -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+
+	<!-- Socket IO -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+	<!-- ScarletsFrame -->
+	<script src='https://cdn.jsdelivr.net/npm/scarletsframe@latest/dist/scarletsframe.min.js'></script>
+
+	<!-- SFMediaStream -->
+	<script src="/dist/SFMediaStream.js"></script>
+</head>
+<body>
+	<div class="container">
+		<sf-m name="the-app">
+			<div class="gray-text">Your socket ID: <span>{{ id }}</span></div>
+
+			<div class="little-space">App debug:</div>
+			<textarea class="form-control" value="{{ debugText }}"></textarea>
+		</sf-m>
+
+		<sf-m name="presenter">
+			<div class="app-info">Presenter is for broadcasting to the streamer</div>
+			<div class="row">
+				<!-- Callback in ./browser/presenter.js -->
+				<button @click="start" class="btn btn-secondary center">Start</button>
+				<button @click="stop" class="btn btn-secondary center">Stop</button>
+				<button @click="toServerFile" class="btn btn-secondary center">
+					Stream to {{ toServerSpeaker ? 'file' : 'speaker' }}
+				</button>
+			</div>
+			<div class="row little-space">
+				<div class="presenter-status-text">This browser is {{ !bufferHeader ? 'not' : '' }} broadcasting.</div>
+				<input class="col-md-6 form-control center" value="Buffer sent: {{ broadcastBytes }}bytes">
+			</div>
+		</sf-m>
+	</div>
+
+	<!-- This app -->
+	<link rel="stylesheet" href="/browser/app.css">
+	<script src="/browser/app.js"></script>
+	<script src="/browser/socket.js"></script>
+	<script src="/browser/presenter.js"></script>
+</body>
+</html>
