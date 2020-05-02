@@ -16,9 +16,6 @@ sf.model('streamer', function(self){
 	*/};
 
 	self.start = function(){
-		delete self.listening.add;
-		delete self.listening.refresh;
-		delete self.listening.delete;
 		swal("Presenter ID:", {content:"input"}).then(create);
 	}
 
@@ -33,7 +30,7 @@ sf.model('streamer', function(self){
 			};
 
 			self.active = true;
-			self.listening.add(presenterID, streamer);
+			self.listening.set(presenterID, streamer);
 			streamer.instance.playStream();
 
 			app.debug("New streamer instance was created");
