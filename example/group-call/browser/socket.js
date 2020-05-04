@@ -38,7 +38,7 @@ socket.on('streamerGone', function(id){
 // Handle disconnected presenter
 socket.on('presenterGone', function(id){
 	if(app.streamer.listening[id] !== undefined){
-		app.streamer.listening.delete(id);
+		sf.delete(app.streamer.listening, id);
 		app.debug("Listener with ID:", id, "was removed");
 	}
 });

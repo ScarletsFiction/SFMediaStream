@@ -30,7 +30,9 @@ sf.model('streamer', function(self){
 			};
 
 			self.active = true;
-			self.listening.set(presenterID, streamer);
+
+			// Set object property
+			sf.set(self.listening, presenterID, streamer);
 			streamer.instance.playStream();
 
 			app.debug("New streamer instance was created");
