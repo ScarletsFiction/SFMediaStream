@@ -36,11 +36,11 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		audioNode.connect(node);
 	}
 
-	scope.disconnect = function(){
-		outputNode.disconnect();
+	scope.disconnect = function(node){
+		scope.outputNode.disconnect(node);
 		directAudioOutput = true;
 
-		audioNode.disconnect();
+		audioNode.disconnect(node);
 		audioNode.connect(scope.audioContext.destination);
 	}
 

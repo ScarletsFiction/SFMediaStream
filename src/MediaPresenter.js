@@ -7,7 +7,7 @@ var ScarletsMediaPresenter = function(options, latency){
 	//    audio:{
 	//        channelCount:1,
 	//        echoCancellation: false
-	//    }, 
+	//    },
 	//    video:{
 	//        frameRate:15,
 	//        width: 1280,
@@ -35,6 +35,8 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	// Deprecated
 	scope.options = options;
+
+	scope.polyfill = void 0;
 
 	var mediaType = options.video ? 'video' : 'audio';
 
@@ -72,7 +74,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream, options);
+		scope.mediaRecorder = new MediaRecorder(mediaStream, options, scope.polyfill);
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -112,6 +114,20 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.mediaRecorder.start(latency);
 	}
 
+	var sourceNode = false;
+	scope.connect = function(node){
+		if(!scope.mediaStream)
+			return console.error("The stream should be started before adding new effect");
+
+		sourceNode = ScarletsMedia.audioContext.createMediaStreamSource(scope.mediaStream);
+		sourceNode.connect(node);
+	}
+
+	scope.disconnect = function(node){
+		if(sourceNode)
+			sourceNode.disconnect(node);
+	}
+
 	scope.startRecording = function(){
 		if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
@@ -128,6 +144,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		}
 	};
 
+	// ToDo: Allow reuse instead of removing tracks when stopping
 	scope.stopRecording = function(){
 		scope.mediaRecorder.stop();
 		if(!scope.mediaRecorder.stream.stop){
