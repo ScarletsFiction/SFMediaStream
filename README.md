@@ -136,8 +136,8 @@ audioStreamer.debug = true;
 |receiveBuffer|`(packetBuffer)`|Receive arrayBuffer and play it when last buffer finished playing|
 |realtimeBufferPlay|`(packetBuffer)`|Receive arrayBuffer and immediately play it|
 |stop|`()`|Stop playing any buffer|
-|connect|`(AudioNode)`|Connect the streamer to other AudioNode and disable direct output|
-|disconnect|`(AudioNode)`|Disconnect the streamer from any AudioNode and enable direct output|
+|connect|`(AudioNode)`|Connect the streamer to other AudioNode|
+|disconnect|`(AudioNode)`|Disconnect the streamer from any AudioNode|
 
 ## ScarletsVideoStreamer
 This class is used for buffering and playing microphone & camera stream from the server.
@@ -168,8 +168,8 @@ videoStreamer.debug = true;
 |playStream|`()`|Set this library to automatically play any received buffer|
 |receiveBuffer|`(arrayBuffer)`|Receive arrayBuffer and play it when last buffer finished playing|
 |stop|`()`|Stop playing any buffer|
-|audioConnect|`(AudioNode)`|Connect the streamer to other AudioNode and disable direct output|
-|audioDisconnect|`(AudioNode)`|Disconnect the streamer from any AudioNode and enable direct output|
+|audioConnect|`(AudioNode)`|Connect the streamer to other AudioNode|
+|audioDisconnect|`(AudioNode)`|Disconnect the streamer from any AudioNode|
 
 ### Example
 ```js
