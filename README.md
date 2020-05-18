@@ -33,7 +33,7 @@ var streamer = new AudioStreamer(...);
 ### ScarletsMediaPresenter
 This class is used for streaming local media like camera or microphone to the server.
 
-#### Properties
+### Properties
 | Property  | Details |
 | --- | --- |
 | debug | Set to true for outputting any message to browser console |
@@ -42,6 +42,7 @@ This class is used for streaming local media like camera or microphone to the se
 | mediaGranted | Return true if user granted the recorder |
 | recordingReady | Return true if the recording was ready |
 | recording | Return true if currently recording |
+| destination | Used for connect audio node to the recorder |
 | options.mimeType | Return mimeType that being used |
 
 ```js
@@ -49,18 +50,13 @@ This class is used for streaming local media like camera or microphone to the se
 presenterMedia.debug = true;
 ```
 
-#### Method
-###### startRecording
-Start recording camera or microphone
-```js
-presenterMedia.startRecording();
-```
-
-###### stopRecording
-Stop recording camera or microphone
-```js
-presenterMedia.stopRecording();
-```
+### Method
+|Function|Arguments|Description|
+|---|---|---|
+|startRecording|`()`|Start recording camera or microphone|
+|stopRecording|`()`|Stop recording camera or microphone|
+|connect|`(AudioNode)`|Connect presenter's stream to audio processing before being recorded and disable direct output|
+|disconnect|`(AudioNode)`|Disconnect presenter's stream from audio processing|
 
 #### Event Listener
 ###### onRecordingReady
@@ -80,7 +76,7 @@ presenterMedia.onBufferProcess = function(packet){
 };
 ```
 
-#### Example
+### Example
 ```js
 var presenterMedia = new ScarletsMediaPresenter({
     audio:{
@@ -111,7 +107,7 @@ presenterMedia.startRecording();
 presenterMedia.stopRecording();
 ```
 
-### ScarletsAudioStreamer
+## ScarletsAudioStreamer
 This class is used for buffering and playing microphone stream from the server.
 
 ```js
@@ -119,7 +115,7 @@ This class is used for buffering and playing microphone stream from the server.
 var audioStreamer = new ScarletsAudioStreamer(1000); // 1sec
 ```
 
-#### Properties
+### Properties
 | Property  | Details |
 | --- | --- |
 | debug | Set to true for outputting any message to browser console |
@@ -133,52 +129,26 @@ var audioStreamer = new ScarletsAudioStreamer(1000); // 1sec
 audioStreamer.debug = true;
 ```
 
-#### Method
-###### playStream
-Set this library to automatically play any received buffer
-```js
-audioStreamer.playStream();
-```
+### Method
+|Function|Arguments|Description|
+|---|---|---|
+|playStream|`()`|Set this library to automatically play any received buffer|
+|receiveBuffer|`(packetBuffer)`|Receive arrayBuffer and play it when last buffer finished playing|
+|realtimeBufferPlay|`(packetBuffer)`|Receive arrayBuffer and immediately play it|
+|stop|`()`|Stop playing any buffer|
+|connect|`(AudioNode)`|Connect the streamer to other AudioNode and disable direct output|
+|disconnect|`(AudioNode)`|Disconnect the streamer from any AudioNode and enable direct output|
 
-###### receiveBuffer
-Receive arrayBuffer and play it when last buffer finished playing
-```js
-audioStreamer.receiveBuffer(arrayBuffer);
-```
-
-###### realtimeBufferPlay
-Receive arrayBuffer and immediately play it
-```js
-audioStreamer.realtimeBufferPlay(arrayBuffer);
-```
-
-###### stop
-Stop playing any buffer
-```js
-audioStreamer.stop();
-```
-
-###### connect
-Connect the streamer to other AudioNode and disable direct output
-```js
-audioStreamer.connect(AudioNode);
-```
-
-###### disconnect
-Disconnect the streamer from any AudioNode and enable direct output
-```js
-audioStreamer.disconnect();
-```
-
-### ScarletsVideoStreamer
+## ScarletsVideoStreamer
 This class is used for buffering and playing microphone & camera stream from the server.
+> Still in [experimental mode](https://github.com/bbc/VideoContext) and have some bug.
 
 ```js
 // Usually the minimum duration for video is 1000ms
 var videoStreamer = new ScarletsVideoStreamer(videoHTML, 1000); // 1sec
 ```
 
-#### Properties
+### Properties
 | Property  | Details |
 | --- | --- |
 | debug | Set to true for outputting any message to browser console |
@@ -192,39 +162,18 @@ var videoStreamer = new ScarletsVideoStreamer(videoHTML, 1000); // 1sec
 videoStreamer.debug = true;
 ```
 
-#### Method
-###### playStream
-Set this library to automatically play any received buffer
-```js
-videoStreamer.playStream();
-```
+### Method
+|Function|Arguments|Description|
+|---|---|---|
+|playStream|`()`|Set this library to automatically play any received buffer|
+|receiveBuffer|`(arrayBuffer)`|Receive arrayBuffer and play it when last buffer finished playing|
+|stop|`()`|Stop playing any buffer|
+|audioConnect|`(AudioNode)`|Connect the streamer to other AudioNode and disable direct output|
+|audioDisconnect|`(AudioNode)`|Disconnect the streamer from any AudioNode and enable direct output|
 
-###### receiveBuffer
-Receive arrayBuffer and play it when last buffer finished playing
+### Example
 ```js
-videoStreamer.receiveBuffer(arrayBuffer);
-```
-
-###### stop
-Stop playing any buffer
-```js
-videoStreamer.stop();
-```
-
-###### audioConnect
-Connect the streamer to other AudioNode and disable direct output
-```js
-videoStreamer.audioConnect(AudioNode);
-```
-
-###### audioDisconnect
-Disconnect the streamer from any AudioNode and enable direct output
-```js
-videoStreamer.audioDisconnect();
-```
-
-#### Example
-```js
+// var audioStreamer = new ScarletsAudioStreamer(1000); // 1sec
 var videoStreamer = new ScarletsVideoStreamer(1000); // 1sec
 videoStreamer.playStream();
 
@@ -246,14 +195,14 @@ videoStreamer.audioConnect(ppDelay.input);
 ppDelay.output.connect(ScarletsMedia.audioContext.destination);
 ```
 
-### ScarletsMediaPlayer
+## ScarletsMediaPlayer
 This class is used for playing video or audio from url.
 
 ```js
 var mediaPlayer = new ScarletsMediaPlayer(document.querySelector('audio'));
 ```
 
-#### Properties
+### Properties
 | Property  | Details |
 | --- | --- |
 | autoplay | Sets or returns whether the audio/video should start playing as soon as it is loaded |
@@ -282,54 +231,23 @@ The videoContext still in [experimental mode](https://github.com/bbc/VideoContex
 mediaPlayer.preload = "metadata";
 ```
 
-#### Method
-###### load
-Re-loads the audio/video element
-```js
-mediaPlayer.load();
-```
+### Method
+|Function|Arguments|Description|
+|---|---|---|
+|load|`()`|Re-loads the audio/video element|
+|[canPlayType](https://www.w3schools.com/tags/av_met_canplaytype.asp)|`(str)`|Checks if the browser can play the specified audio/video type|
+|speed|`(0 ~ 1)`|Sets or returns the speed of the audio/video playback|
+|mute|`(boolean)`|Sets or returns whether the audio/video is muted or not|
+|volume|`(0 ~ 1)`|Sets or returns the volume of the audio/video|
+|play|`()`|Starts playing the audio/video|
+|pause|`()`|Pauses the currently playing audio/video|
 
-###### canPlayType
-Checks if the browser can play the specified audio/video type
-```js
-// https://www.w3schools.com/tags/av_met_canplaytype.asp
-mediaPlayer.canPlayType();
-```
-
-###### speed
-Sets or returns the speed of the audio/video playback
-```js
-mediaPlayer.speed(0.5);
-```
-
-###### mute
-Sets or returns whether the audio/video is muted or not
-```js
-mediaPlayer.mute(true);
-```
-
-###### volume
-Sets or returns the volume of the audio/video
-```js
-mediaPlayer.volume(0.8);
-```
-
-###### play
-Starts playing the audio/video
-```js
-mediaPlayer.play();
-```
-
-###### pause
-Pauses the currently playing audio/video
-```js
-mediaPlayer.pause();
-```
+Below also the available method.
 
 ###### prepare
 Load media from URL
 ```js
-mediaPlayer.prepare('my.mp3' || ['my.mp3', 'fallback.ogg'], function(){
+mediaPlayer.prepare('my.mp3' /*single*/ || /*with fallback*/ ['my.mp3', 'fallback.ogg'], function(){
     mediaPlayer.play();
 });
 ```
@@ -398,7 +316,7 @@ mediaPlayer.once('abort', function(e){
 mediaPlayer.poster = 'url.png';
 ```
 
-#### Properties
+### Properties
 ###### audioFadeEffect
 Enable fade effect when playing or pausing the sound
 ```js
@@ -415,7 +333,7 @@ var equalizer = ScarletsMediaEffect.equalizer(null, mediaPlayer.audioOutput);
 equalizer.output.connect(ScarletsMedia.audioContext.destination);
 ```
 
-#### ScarletsMediaEffect
+## ScarletsMediaEffect
 This feature can be used on every media if you have the media source node as the input. And make sure every node is connected to `AudioContext.destination` or it will not playable.
 
 The plugins have a function to destroy node connection that aren't being used. So don't forget to destroy your unused effect to clean unused memory.
@@ -423,7 +341,7 @@ The plugins have a function to destroy node connection that aren't being used. S
 effect.destroy();
 ```
 
-##### Available Plugin
+### Available Plugin
 | Effect  | Details |
 | --- | --- |
 | Chorus | An effect to make a single voice like multiple voices |
@@ -463,10 +381,10 @@ panner.connect(ScarletsMedia.audioContext.destination);
 // player.audioOutput -> pingPongDelay -> Panner -> final destination
 ```
 
-#### Playlist
+## Playlist
 This will be available on current media player
 
-##### Properties
+### Properties
 | Property  | Details |
 | --- | --- |
 | currentIndex | Return index of current playing media |
@@ -480,7 +398,7 @@ This will be available on current media player
 console.log('Current playlist count', mediaPlayer.playlist.original.length);
 ```
 
-##### Method
+### Method
 ###### reload
 Replace old playlist data
 ```js
