@@ -129,11 +129,11 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		audioNode.connect(node);
 	}
 
-	scope.disconnect = function(){
-		outputNode.disconnect();
+	scope.disconnect = function(node){
+		scope.outputNode.disconnect(node);
 		directAudioOutput = true;
 
-		audioNode.disconnect();
+		audioNode.disconnect(node);
 		audioNode.connect(scope.audioContext.destination);
 	}
 
@@ -712,7 +712,7 @@ var ScarletsMediaPresenter = function(options, latency){
 	//    audio:{
 	//        channelCount:1,
 	//        echoCancellation: false
-	//    }, 
+	//    },
 	//    video:{
 	//        frameRate:15,
 	//        width: 1280,
@@ -740,6 +740,8 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	// Deprecated
 	scope.options = options;
+
+	scope.polyfill = void 0;
 
 	var mediaType = options.video ? 'video' : 'audio';
 
@@ -772,12 +774,25 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	var mediaGranted = function(mediaStream) {
 		scope.mediaGranted = true;
-		scope.mediaStream = mediaStream;
+
+		// For adding effect later (if audio available)
+		if(options.audio !== void 0){
+			scope.source = ScarletsMedia.audioContext.createMediaStreamSource(mediaStream);
+			scope.mediaStream = mediaStream = scope.destination.stream;
+
+			if(pendingConnect.length !== 0){
+				for (var i = 0; i < pendingConnect.length; i++)
+					scope.source(pendingConnect[i]);
+
+				pendingConnect.length = 0;
+			}
+			else scope.source.connect(scope.destination);
+		}
 
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream, options);
+		scope.mediaRecorder = new MediaRecorder(mediaStream, options, scope.polyfill);
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -817,11 +832,41 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.mediaRecorder.start(latency);
 	}
 
+	var pendingConnect = [];
+
+	scope.source = void 0;
+	scope.destination = ScarletsMedia.audioContext.createMediaStreamDestination();
+
+	scope.connect = function(node){
+		if(scope.source === void 0){
+			pendingConnect.push(node);
+			return;
+		}
+
+		scope.source.connect(node);
+	}
+
+	scope.disconnect = function(node){
+		if(scope.source)
+			scope.source.disconnect(node);
+		else{
+			var i = pendingConnect.indexOf(node);
+			if(i === -1)
+				return;
+
+			pendingConnect.splice(i, 1);
+		}
+	}
+
 	scope.startRecording = function(){
 		if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
-			navigator.mediaDevices.getUserMedia(options)
-				.then(mediaGranted).catch(console.error);
+
+			if(!scope.options.screen)
+				navigator.mediaDevices.getUserMedia(options).then(mediaGranted).catch(console.error);
+			else
+				navigator.mediaDevices.getDisplayMedia(options).then(mediaGranted).catch(console.error);
+
 			return false;
 		}
 		else if(scope.mediaRecorder.state === 'recording')
@@ -833,6 +878,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		}
 	};
 
+	// ToDo: Allow reuse instead of removing tracks when stopping
 	scope.stopRecording = function(){
 		scope.mediaRecorder.stop();
 		if(!scope.mediaRecorder.stream.stop){

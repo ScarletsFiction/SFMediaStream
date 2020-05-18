@@ -69,7 +69,20 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	var mediaGranted = function(mediaStream) {
 		scope.mediaGranted = true;
-		scope.mediaStream = mediaStream;
+
+		// For adding effect later (if audio available)
+		if(options.audio !== void 0){
+			scope.source = ScarletsMedia.audioContext.createMediaStreamSource(mediaStream);
+			scope.mediaStream = mediaStream = scope.destination.stream;
+
+			if(pendingConnect.length !== 0){
+				for (var i = 0; i < pendingConnect.length; i++)
+					scope.source(pendingConnect[i]);
+
+				pendingConnect.length = 0;
+			}
+			else scope.source.connect(scope.destination);
+		}
 
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
@@ -114,25 +127,41 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.mediaRecorder.start(latency);
 	}
 
-	var sourceNode = false;
-	scope.connect = function(node){
-		if(!scope.mediaStream)
-			return console.error("The stream should be started before adding new effect");
+	var pendingConnect = [];
 
-		sourceNode = ScarletsMedia.audioContext.createMediaStreamSource(scope.mediaStream);
-		sourceNode.connect(node);
+	scope.source = void 0;
+	scope.destination = ScarletsMedia.audioContext.createMediaStreamDestination();
+
+	scope.connect = function(node){
+		if(scope.source === void 0){
+			pendingConnect.push(node);
+			return;
+		}
+
+		scope.source.connect(node);
 	}
 
 	scope.disconnect = function(node){
-		if(sourceNode)
-			sourceNode.disconnect(node);
+		if(scope.source)
+			scope.source.disconnect(node);
+		else{
+			var i = pendingConnect.indexOf(node);
+			if(i === -1)
+				return;
+
+			pendingConnect.splice(i, 1);
+		}
 	}
 
 	scope.startRecording = function(){
 		if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
-			navigator.mediaDevices.getUserMedia(options)
-				.then(mediaGranted).catch(console.error);
+
+			if(!scope.options.screen)
+				navigator.mediaDevices.getUserMedia(options).then(mediaGranted).catch(console.error);
+			else
+				navigator.mediaDevices.getDisplayMedia(options).then(mediaGranted).catch(console.error);
+
 			return false;
 		}
 		else if(scope.mediaRecorder.state === 'recording')
