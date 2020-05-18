@@ -1,5 +1,5 @@
 {
-  "name": "streaming-test",
+  "name": "group-call",
   "license": "MIT",
   "scripts": {
     "start": "node server.js"

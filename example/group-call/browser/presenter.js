@@ -62,4 +62,35 @@ sf.model('presenter', function(self){
 			packet:self.bufferHeader
 		});
 	}
+
+	// if this == true, this will change the button to 'remove'
+	self.effect = false;
+
+	var ppDelay;
+	self.addPingPongDelay = function(){
+		if(self.effect){
+			// Removing effect
+			self.effect = false;
+
+			// Disconnect from effect
+			presenterInstance.disconnect(ppDelay.input);
+
+			// And immediately connect to it's original destination
+			presenterInstance.connect(presenterInstance.destination);
+			return;
+		}
+
+		if(!presenterInstance)
+			return app.debug("Are we the presenter? start it first :)");
+
+		ppDelay = ScarletsMediaEffect.pingPongDelay();
+
+		// Try disconnect from presenter's original destination first
+		presenterInstance.disconnect(presenterInstance.destination);
+
+		presenterInstance.connect(ppDelay.input);
+		ppDelay.output.connect(presenterInstance.destination);
+
+		self.effect = true;
+	}
 });
