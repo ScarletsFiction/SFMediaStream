@@ -27,6 +27,9 @@ sf.model('presenter', function(self){
 	}
 
 	self.stop = function(){
+		if(!presenterInstance)
+			return;
+
 		presenterInstance.stopRecording();
 		delete presenterInstance.onBufferProcess;
 
@@ -38,9 +41,10 @@ sf.model('presenter', function(self){
 		self.toServerSpeaker = !self.toServerSpeaker;
 
 		// Send signal to end file writing to the server
-		if(self.toServerSpeaker && self.bufferHeader){
+		if(self.toServerSpeaker){
 			// To stream to server speaker we must use WAV
 			window.MediaRecorder = OpusMediaRecorder;
+			console.log("Polyfill used: window.OpusMediaRecorder");
 
 			self.stop();
 
@@ -49,6 +53,7 @@ sf.model('presenter', function(self){
 		}
 		else{
 			window.MediaRecorder = NativeMediaRecorder;
+			console.log("Polyfill used:", false);
 
 			// Stop and create new instance, with audio/webm mimeType
 			self.stop();
