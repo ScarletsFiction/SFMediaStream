@@ -1,339 +1,401 @@
 // https://www.w3schools.com/tags/ref_av_dom.asp
 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
-var ScarletsMediaPlayer = function(element){
-	// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
-	var self = this;
 
-	if(element === void 0)
-		element = 'audio';
-
-	if(element.constructor === String){
-		if(element !== 'audio' && element !== 'video')
-			return console.error('Supported player is "audio" or "video"');
-
-		element = document.createElement(element);
-		document.body.appendChild(element);
-	}
-
-	var propertyLinker = ['autoplay', 'loop', 'buffered', 'buffered', 'controller', 'currentTime', 'currentSrc', 'duration', 'ended', 'error', 'readyState', 'networkState', 'paused', 'played', 'seekable', 'seeking'];
-
-	// Get element audio for output node
-	var audioOutputNode = false;
-	Object.defineProperty(self, 'audioOutput', {
-		get: function(){
-			if(!audioOutputNode)
-				audioOutputNode = ScarletsMedia.getElementAudioNode(element);
-
-			return audioOutputNode;
-		},
-		enumerable: true
-	});
-
-	if(element.tagName.toLowerCase() === 'video'){
-		propertyLinker = propertyLinker.concat(['poster', 'height', 'width']);
-
-		// Get element video for output node
-		var videoOutputNode = false;
-		Object.defineProperty(self, 'videoOutput', {
-			get: function(){
-				if(!videoOutputNode)
-					videoOutputNode = ScarletsMedia.getElementVideoNode(element);
-
-				return videoOutputNode;
-			},
-			enumerable: true
-		});
-	}
-
-	// Reference element function
-	self.load = function(){
-		element.load();
-	}
-
-	self.canPlayType = function(){
-		element.canPlayType();
-	}
-
-	// Reference element property
-	for (var i = 0; i < propertyLinker.length; i++) {
-		ScarletsMedia.extra.objectPropertyLinker(self, element, propertyLinker[i]);
-	}
-
-	self.preload = true;
-	element.preload = 'metadata';
-	element.crossorigin = 'anonymous';
-	self.audioFadeEffect = true;
-
-	self.speed = function(set){
-		if(set === undefined) return element.defaultPlaybackRate;
-		element.defaultPlaybackRate = element.playbackRate = set;
-	}
-
-	self.mute = function(set){
-		if(set === undefined) return element.muted;
-		element.defaultMuted = element.muted = set;
-	}
-
-	var volume = 1;
-	self.volume = function(set){
-		if(set === undefined) return volume;
-		element.volume = volume = set;
-	}
-
-	var stillWaiting = false;
-	function play(successCallback, errorCallback){
-		element.play().then(function(){
-			stillWaiting = false;
-			if(successCallback) successCallback();
-		}).catch(function(e){
-			if(errorCallback) errorCallback(e);
-			else{
-				// If user haven't interacted with the page
-				// and media play was requested, let's pending it
-				if(userInteracted === false){
-					if(stillWaiting === false){
-						waitingUnlock.push(function(){
-							play(successCallback, errorCallback);
-						});
-					}
-					return;
-				}
-
-				console.error(e);
-			}
-		});
-	}
-
-	self.play = function(successCallback, errorCallback){
-		if(!element.paused){
-			if(successCallback) successCallback();
-			return;
-		}
-		if(self.audioFadeEffect){
-			element.volume = 0;
-			play(successCallback, errorCallback);
-			ScarletsMedia.extra.fadeNumber(0, volume, 0.02, 400, function(num){
-				element.volume = num;
-			}, successCallback);
-			return;
-		}
-
-		play(successCallback, errorCallback);
-	}
-
-	self.pause = function(callback){
-		if(element.paused){
-			if(callback) callback();
-			return;
-		}
-		if(self.audioFadeEffect){
-			ScarletsMedia.extra.fadeNumber(volume, 0, -0.02, 400, function(num){
-				element.volume = num;
-			}, function(){
-				element.pause();
-				if(callback) callback();
-			});
-			return;
-		}
-		element.pause();
-		if(callback) callback();
-	}
-
-	self.prepare = function(links, callback, force){
-		// Stop playing media
-		if(!force && !element.paused)
-			return self.pause(function(){
-				self.prepare(links, callback, true);
-			});
-
-		var temp = element.querySelectorAll('source');
-		for (var i = temp.length - 1; i >= 0; i--) {
-			temp[i].remove();
-		}
-
-		if(self.preload && callback){
-			self.once('canplay', callback);
-			self.once('error', function(){
-				self.off('canplay', callback);
-			});
-		}
-
-		if(typeof links === 'string')
-			element.insertAdjacentHTML('beforeend', `<source src="${links.split('"').join('\\"')}"/>`);
+var stillWaiting = false;
+function interactedPlay(element, successCallback, errorCallback){
+	element.play().then(function(){
+		stillWaiting = false;
+		if(successCallback) successCallback();
+	}).catch(function(e){
+		if(errorCallback) errorCallback(e);
 		else{
-			temp = '';
-			for (var i = 0; i < links.length; i++) {
-				temp += `<source src="${links[i].split('"').join('\\"')}"/>`;
+			// If user haven't interacted with the page
+			// and media play was requested, let's pending it
+			if(userInteracted === false){
+				if(stillWaiting === false){
+					waitingUnlock.push(function(){
+						interactedPlay(element, successCallback, errorCallback);
+					});
+				}
+				return;
 			}
-			element.insertAdjacentHTML('beforeend', temp);
+
+			console.error(e);
+		}
+	});
+}
+
+class ScarletsMediaPlayer{
+	element = null;
+	type = '';
+	preload = true;
+	audioFadeEffect = true;
+	videoNode = null;
+	audioNode = null;
+	events = {};
+
+	constructor(element, options){
+		if(element && element.constructor === Object){
+			options = element;
+			element = void 0;
 		}
 
-		// Preload data
-		if(self.preload)
-			element.load();
+		// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
+		if(element === void 0)
+			element = 'audio';
 
-		else if(callback)
-			callback();
+		if(element.constructor === String){
+			if(element !== 'audio' && element !== 'video')
+				return console.error('Supported player is "audio" or "video"');
+
+			this.type = element;
+
+			element = document.createElement(element);
+			document.body.appendChild(element);
+		}
+		else this.type = element.tagName.toLowerCase();
+
+		this.element = element;
+
+		element.preload = 'metadata';
+		element.crossorigin = 'anonymous';
+
+		this.playlist = new Playlist(this, this.events);
+
+		if(options && options.fadeEffect){
+			if(options.fadeEffect === 'experimental'){
+				this.audioNode = ScarletsMedia.getElementAudioNode(this.element);
+				this.audioFadeEffect = ScarletsMediaEffect.fade(this.audioNode);
+				this.audioFadeEffect.output.connect(ScarletsMedia.audioContext.destination);
+			}
+		}
 	}
 
-	var eventRegistered = {};
-	function eventTrigger(e){
-		for (var i = 0; i < eventRegistered[e.type].length; i++) {
-			eventRegistered[e.type][i](e, self);
+	load(){
+		this.element.load();
+	}
+
+	canPlayType(){
+		this.element.canPlayType();
+	}
+
+	speed(set){
+		if(set === void 0) return this.element.defaultPlaybackRate;
+		this.element.defaultPlaybackRate = this.element.playbackRate = set;
+	}
+
+	mute(set){
+		if(set === void 0) return this.element.muted;
+		this.element.defaultMuted = this.element.muted = set;
+	}
+
+	#volume = 1;
+	volume(set){
+		if(set === void 0) return this.#volume;
+		this.element.volume = this.#volume = set;
+	}
+
+	_eventTrigger(e){
+		for (var i = 0; i < this.events[e.type].length; i++) {
+			this.events[e.type][i](e, this);
 		}
 	}
 
 	// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
-	self.on = function(eventName, callback){
-		var name = eventName.toLowerCase();
-		if(eventRegistered[name] === undefined){
-			element.addEventListener(eventName, eventTrigger, true);
-			eventRegistered[name] = [];
+	on(name, callback){
+		if(this.events[name] === void 0){
+			this.element.addEventListener(name, this._eventTrigger, true);
+			this.events[name] = [];
 		}
-		eventRegistered[name].push(callback);
-		return self;
+
+		this.events[name].push(callback);
+		return this;
 	}
 
-	self.off = function(eventName, callback){
-		var name = eventName.toLowerCase();
-		if(eventRegistered[name] === undefined){
-			element.removeEventListener(eventName, callback, true);
+	off(name, callback){
+		if(this.events[name] === void 0){
+			this.element.removeEventListener(name, callback, true);
 			return;
 		}
 
 		if(!callback)
-			eventRegistered[name].splice(0);
+			this.events[name].splice(0);
 		else
-			eventRegistered[name].splice(eventRegistered[name].indexOf(callback), 1);
+			this.events[name].splice(this.events[name].indexOf(callback), 1);
 
-		if(eventRegistered[name].length === 0){
-			eventRegistered[name] = undefined;
-			element.removeEventListener(eventName, eventTrigger, true);
+		if(this.events[name].length === 0){
+			this.events[name] = void 0;
+			this.element.removeEventListener(name, this._eventTrigger, true);
 		}
-		return self;
+		return this;
 	}
 
-	self.once = function(eventName, callback){
-		element.addEventListener(eventName, callback, {once:true});
-		return self;
+	once(name, callback){
+		this.element.addEventListener(name, callback, {once:true});
+		return this;
 	}
 
-	self.destroy = function(){
-		for(var key in eventRegistered){
-			self.off(key);
-		}
-		self.playlist.list.splice(0);
-		self.playlist.original.splice(0);
-		for(var key in self){
-			delete self[key];
-		}
-		self = null;
+	destroy(){
+		for(var key in this.events)
+			this.off(key);
+
+		this.playlist.list.splice(0);
+		this.playlist.original.splice(0);
 
 		element.pause();
 		element.innerHTML = '';
 	}
 
-	var playlistInitialized = false;
-	function internalPlaylistEvent(){
-		if(playlistInitialized) return;
-		playlistInitialized = true;
+	play(successCallback, errorCallback){
+		if(!this.element.paused){
+			if(successCallback) successCallback();
+			return;
+		}
 
-		self.on('ended', function(){
-			if(self.playlist.currentIndex < self.playlist.list.length - 1)
-				self.playlist.next(true);
-			else if(self.playlist.loop)
-				self.playlist.play(0);
+		if(this.audioFadeEffect){
+			var that = this;
+
+			if(this.audioFadeEffect !== true)
+				this.audioFadeEffect.out(1, 400, successCallback);
+			else ScarletsMedia.extra.fadeNumber(0, this.#volume, 0.02, 400, function(num){
+				that.element.volume = num;
+			}, successCallback);
+
+			interactedPlay(this.element, successCallback, errorCallback);
+
+			return;
+		}
+
+		interactedPlay(this.element, successCallback, errorCallback);
+	}
+
+	pause(callback){
+		if(this.element.paused){
+			if(callback) callback();
+			return;
+		}
+
+		if(this.audioFadeEffect){
+			var that = this;
+			if(this.audioFadeEffect !== true)
+				this.audioFadeEffect.out(0, 400, function(){
+					this.element.pause();
+					if(callback) callback();
+				});
+			else ScarletsMedia.extra.fadeNumber(this.#volume, 0, -0.02, 400, function(num){
+				that.element.volume = num;
+			}, function(){
+				that.element.pause();
+				if(callback) callback();
+			});
+			return;
+		}
+
+		this.element.pause();
+		if(callback) callback();
+	}
+
+	prepare(links, callback, force){
+		// Stop playing media
+		if(!force && !this.element.paused){
+			var that = this;
+			return this.pause(function(){
+				that.prepare(links, callback, true);
+			});
+		}
+
+		var temp = this.element.querySelectorAll('source');
+		for (var i = temp.length - 1; i >= 0; i--)
+			temp[i].remove();
+
+		if(this.preload && callback){
+			var that = this;
+			this.once('canplay', callback);
+			this.once('error', function(){
+				that.off('canplay', callback);
+			});
+		}
+
+		if(typeof links === 'string')
+			this.element.insertAdjacentHTML('beforeend', `<source src="${links.split('"').join('\\"')}"/>`);
+		else{
+			temp = '';
+			for (var i = 0; i < links.length; i++)
+				temp += `<source src="${links[i].split('"').join('\\"')}"/>`;
+
+			this.element.insertAdjacentHTML('beforeend', temp);
+		}
+
+		// Preload data
+		if(this.preload)
+			this.element.load();
+
+		else if(callback)
+			callback();
+	}
+
+	get videoOutput(){
+		if(this.type !== 'video')
+			return console.error("Can be used for video player");
+
+		if(!this.videoNode)
+			this.videoNode = ScarletsMedia.getElementVideoNode(this.element);
+
+		return this.videoNode;
+	}
+
+	get audioOutput(){
+		if(this.type !== 'audio')
+			return console.error("Can be used for audio player");
+
+		if(!this.audioNode)
+			this.audioNode = ScarletsMedia.getElementAudioNode(this.element);
+
+		return this.audioNode;
+	}
+
+	get autoplay(){return this.element.autoplay}
+	set autoplay(val){this.element.autoplay = val}
+	get loop(){return this.element.loop}
+	set loop(val){this.element.loop = val}
+	get buffered(){return this.element.buffered}
+	get controller(){return this.element.controller}
+	set controller(val){this.element.controller = val}
+	get currentTime(){return this.element.currentTime}
+	set currentTime(val){this.element.currentTime = val}
+	get currentSrc(){return this.element.currentSrc}
+	set currentSrc(val){this.element.currentSrc = val}
+	get duration(){return this.element.duration}
+	set duration(val){this.element.duration = val}
+	get ended(){return this.element.ended}
+	set ended(val){this.element.ended = val}
+	get error(){return this.element.error}
+	get readyState(){return this.element.readyState}
+	get networkState(){return this.element.networkState}
+	get paused(){return this.element.paused}
+	set paused(val){this.element.paused = val}
+	get played(){return this.element.played}
+	set played(val){this.element.played = val}
+	get seekable(){return this.element.seekable}
+	set seekable(val){this.element.seekable = val}
+	get seeking(){return this.element.seeking}
+	set seeking(val){this.element.seeking = val}
+	get poster(){return this.element.poster}
+	set poster(val){this.element.poster = val}
+	get height(){return this.element.height}
+	set height(val){this.element.height = val}
+	get width(){return this.element.width}
+	set width(val){this.element.width = val}
+}
+
+class Playlist{
+	currentIndex = 0;
+	list = [];
+	original = [];
+	loop = false;
+	shuffled = false;
+	#player = null;
+
+	constructor(player){
+		this.#player = player;
+	}
+
+	#playlistInitialized = false;
+	_internalPlaylistEvent(){
+		if(this.#playlistInitialized) return;
+		this.#playlistInitialized = true;
+
+		var that = this;
+		this.#player.on('ended', function(){
+			if(that.currentIndex < that.list.length - 1)
+				that.next(true);
+			else if(that.loop)
+				that.play(0);
 		});
 	}
 
-	function playlistTriggerEvent(name){
-		if(!eventRegistered[name]) return;
-		for (var i = 0; i < eventRegistered[name].length; i++) {
-			eventRegistered[name][i](self, self.playlist, self.playlist.currentIndex);
-		}
+	_playlistTriggerEvent(name){
+		var player = this.#player;
+		if(!player.events[name]) return;
+
+		for (var i = 0; i < player.events[name].length; i++)
+			player.events[name][i](player, this, this.currentIndex);
 	}
 
-	self.playlist = {
-		currentIndex:0,
-		list:[],
-		original:[],
-		loop:false,
-		shuffled:false,
+	// lists = [{yourProperty:'', stream:['main.mp3', 'fallback.ogg', ..]}, ...]
+	reload(lists){
+		this.original = lists;
+		this.shuffle(this.shuffled);
+		this._internalPlaylistEvent();
+	}
 
-		// lists = [{yourProperty:'', stream:['main.mp3', 'fallback.ogg', ..]}, ...]
-		reload:function(lists){
-			this.original = lists;
-			this.shuffle(this.shuffled);
-			internalPlaylistEvent();
-		},
+	// obj = {yourProperty:'', stream:['main.mp3', 'fallback.ogg']}
+	add(obj){
+		this.original.push(obj);
+		this.shuffle(this.shuffled);
+		this._internalPlaylistEvent();
+	}
 
-		// obj = {yourProperty:'', stream:['main.mp3', 'fallback.ogg']}
-		add:function(obj){
-			this.original.push(obj);
-			this.shuffle(this.shuffled);
-			internalPlaylistEvent();
-		},
+	// index from 'original' property
+	remove(index){
+		this.original.splice(index, 1);
+		this.shuffle(this.shuffled);
+	}
 
-		// index from 'original' property
-		remove:function(index){
-			this.original.splice(index, 1);
-			this.shuffle(this.shuffled);
-		},
-
-		next:function(autoplay){
-			this.currentIndex++;
-			if(this.currentIndex >= this.list.length){
-				if(this.loop)
-					this.currentIndex = 0;
-				else{
-					this.currentIndex--;
-					return;
-				}
+	next(autoplay){
+		this.currentIndex++;
+		if(this.currentIndex >= this.list.length){
+			if(this.loop)
+				this.currentIndex = 0;
+			else{
+				this.currentIndex--;
+				return;
 			}
-
-			if(autoplay)
-				this.play(this.currentIndex);
-			else playlistTriggerEvent('playlistchange');
-		},
-
-		previous:function(autoplay){
-			this.currentIndex--;
-			if(this.currentIndex < 0){
-				if(this.loop)
-					this.currentIndex = this.list.length - 1;
-				else{
-					this.currentIndex++;
-					return;
-				}
-			}
-
-			if(autoplay)
-				this.play(this.currentIndex);
-			else playlistTriggerEvent('playlistchange');
-		},
-
-		play:function(index){
-			this.currentIndex = index;
-			playlistTriggerEvent('playlistchange');
-
-			self.prepare(this.list[index].stream, function(){
-				self.play();
-			});
-		},
-
-		shuffle:function(set){
-			if(set === true){
-			    var j, x, i;
-			    for (i = this.list.length - 1; i > 0; i--) {
-			        j = Math.floor(Math.random() * (i + 1));
-			        x = this.list[i];
-			        this.list[i] = this.list[j];
-			        this.list[j] = x;
-			    }
-			}
-			else this.list = this.original.slice(0);
-
-			this.shuffled = set;
 		}
-	};
+
+		if(autoplay)
+			this.play(this.currentIndex);
+		else this._playlistTriggerEvent('playlistchange');
+	}
+
+	previous(autoplay){
+		this.currentIndex--;
+		if(this.currentIndex < 0){
+			if(this.loop)
+				this.currentIndex = this.list.length - 1;
+			else{
+				this.currentIndex++;
+				return;
+			}
+		}
+
+		if(autoplay)
+			this.play(this.currentIndex);
+		else this._playlistTriggerEvent('playlistchange');
+	}
+
+	play(index){
+		this.currentIndex = index;
+		this._playlistTriggerEvent('playlistchange');
+
+		var player = this.#player;
+		player.prepare(this.list[index].stream, function(){
+			player.play();
+		});
+	}
+
+	shuffle(set){
+		if(set === true){
+		    var j, x, i;
+		    for (i = this.list.length - 1; i > 0; i--) {
+		        j = Math.floor(Math.random() * (i + 1));
+		        x = this.list[i];
+		        this.list[i] = this.list[j];
+		        this.list[j] = x;
+		    }
+		}
+		else this.list = this.original.slice(0);
+
+		this.shuffled = set;
+	}
 }
