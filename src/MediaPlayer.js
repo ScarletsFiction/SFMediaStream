@@ -56,6 +56,7 @@ class ScarletsMediaPlayer{
 		else this.type = element.tagName.toLowerCase();
 
 		this.element = element;
+		element.MediaPlayer = this;
 
 		element.preload = 'metadata';
 		element.crossorigin = 'anonymous';
@@ -79,26 +80,23 @@ class ScarletsMediaPlayer{
 		this.element.canPlayType();
 	}
 
-	speed(set){
-		if(set === void 0) return this.element.defaultPlaybackRate;
-		this.element.defaultPlaybackRate = this.element.playbackRate = set;
-	}
+	get speed(){return this.element.defaultPlaybackRate}
+	set speed(val){this.element.defaultPlaybackRate = this.element.playbackRate = val}
 
-	mute(set){
-		if(set === void 0) return this.element.muted;
-		this.element.defaultMuted = this.element.muted = set;
-	}
+	get mute(){return this.element.muted}
+	set mute(val){this.element.defaultMuted = this.element.muted = val}
 
-	#volume = 1;
-	volume(set){
-		if(set === void 0) return this.#volume;
-		this.element.volume = this.#volume = set;
-	}
+	#volume = 1; // Dont delete this, used for volume fade in out
+	get volume(){return this.#volume}
+	set volume(val){this.element.volume = this.#volume = val}
 
 	_eventTrigger(e){
-		for (var i = 0; i < this.events[e.type].length; i++) {
-			this.events[e.type][i](e, this);
-		}
+		var self = this;
+		if(self.MediaPlayer !== void 0)
+			self = self.MediaPlayer;
+
+		for (var i = 0; i < self.events[e.type].length; i++)
+			self.events[e.type][i](e, self);
 	}
 
 	// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events
@@ -151,6 +149,9 @@ class ScarletsMediaPlayer{
 			if(successCallback) successCallback();
 			return;
 		}
+
+		if(!this.element.currentSrc)
+			return console.error("There's nothing to play, have you called .prepare('link') function?");
 
 		if(this.audioFadeEffect){
 			var that = this;
@@ -234,6 +235,9 @@ class ScarletsMediaPlayer{
 			callback();
 	}
 
+	get seek(){return this.currentTime / this.duration}
+	set seek(pos){this.currentTime = this.duration * pos}
+
 	get videoOutput(){
 		if(this.type !== 'video')
 			return console.error("Can be used for video player");
@@ -308,7 +312,7 @@ class Playlist{
 		var that = this;
 		this.#player.on('ended', function(){
 			if(that.currentIndex < that.list.length - 1)
-				that.next(true);
+				that.next();
 			else if(that.loop)
 				that.play(0);
 		});
@@ -322,27 +326,42 @@ class Playlist{
 			player.events[name][i](player, this, this.currentIndex);
 	}
 
+	// Clear and add a new list
 	// lists = [{yourProperty:'', stream:['main.mp3', 'fallback.ogg', ..]}, ...]
+	// lists = [{yourProperty:'', stream:'main.mp3'}, ...]
 	reload(lists){
 		this.original = lists;
 		this.shuffle(this.shuffled);
 		this._internalPlaylistEvent();
+
+		this.#player.prepare(lists[0].stream);
 	}
 
+	// Add new list
 	// obj = {yourProperty:'', stream:['main.mp3', 'fallback.ogg']}
+	// obj = {yourProperty:'', stream:'main.mp3'}
 	add(obj){
-		this.original.push(obj);
+		Array.prototype.push.apply(this.original, arguments);
 		this.shuffle(this.shuffled);
 		this._internalPlaylistEvent();
+
+		if(!this.#player.currentSrc)
+			this.#player.prepare(obj.stream);
 	}
 
-	// index from 'original' property
+	// Remove an index from 'original' list
 	remove(index){
+		if(this.currentIndex === index)
+			this.#player.pause();
+
 		this.original.splice(index, 1);
 		this.shuffle(this.shuffled);
 	}
 
-	next(autoplay){
+	// Clear list
+	clear(){this.original.length = 0}
+
+	next(pending){
 		this.currentIndex++;
 		if(this.currentIndex >= this.list.length){
 			if(this.loop)
@@ -353,12 +372,12 @@ class Playlist{
 			}
 		}
 
-		if(autoplay)
+		if(!pending)
 			this.play(this.currentIndex);
-		else this._playlistTriggerEvent('playlistchange');
+		this._playlistTriggerEvent('playlistchange');
 	}
 
-	previous(autoplay){
+	previous(pending){
 		this.currentIndex--;
 		if(this.currentIndex < 0){
 			if(this.loop)
@@ -369,19 +388,20 @@ class Playlist{
 			}
 		}
 
-		if(autoplay)
+		if(!pending)
 			this.play(this.currentIndex);
-		else this._playlistTriggerEvent('playlistchange');
+		this._playlistTriggerEvent('playlistchange');
 	}
 
 	play(index){
 		this.currentIndex = index;
-		this._playlistTriggerEvent('playlistchange');
 
 		var player = this.#player;
 		player.prepare(this.list[index].stream, function(){
 			player.play();
 		});
+
+		this._playlistTriggerEvent('playlistchange');
 	}
 
 	shuffle(set){
