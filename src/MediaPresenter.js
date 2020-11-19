@@ -77,8 +77,9 @@ var ScarletsMediaPresenter = function(options, latency){
 
 			if(pendingConnect.length !== 0){
 				for (var i = 0; i < pendingConnect.length; i++)
-					scope.source(pendingConnect[i]);
+					scope.source.connect(pendingConnect[i]);
 
+				firstSourceConnect = false;
 				pendingConnect.length = 0;
 			}
 			else scope.source.connect(scope.destination);
@@ -132,10 +133,19 @@ var ScarletsMediaPresenter = function(options, latency){
 	scope.source = void 0;
 	scope.destination = ScarletsMedia.audioContext.createMediaStreamDestination();
 
+	var firstSourceConnect = true;
 	scope.connect = function(node){
 		if(scope.source === void 0){
 			pendingConnect.push(node);
 			return;
+		}
+
+		if(firstSourceConnect){
+			try{
+				scope.source.disconnect(scope.destination);
+			}catch(e){}
+
+			firstSourceConnect = false;
 		}
 
 		scope.source.connect(node);
