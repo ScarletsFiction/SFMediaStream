@@ -13,6 +13,8 @@ The default configuration is intended for newer browser. If you want to build 2-
 You can download minified js from this repository or use this CDN link
 `<script type="text/javascript" src='https://cdn.jsdelivr.net/npm/sfmediastream@latest'></script>`
 
+If you want to use the old release, please modify the `latest` into a specific version.
+
 And include it on your project
 ```js
 var presenter = new ScarletsMediaPresenter(...);
