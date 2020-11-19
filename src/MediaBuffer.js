@@ -6,23 +6,34 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 	var removing = false;
 	var totalTime = 0;
 	var removeCount = 10;
-
 	var sourceBuffer = null;
+	var buffers = [];
+
 	scope.source.onsourceopen = function(){
 		sourceBuffer = scope.source.addSourceBuffer(mimeType);
 		sourceBuffer.mode = 'sequence';
 		sourceBuffer.appendBuffer(bufferHeader);
 
-		sourceBuffer.onupdateend = function(){
-			if(removing === false) return;
-
-			removing = false;
-			totalTime = 0;
-			sourceBuffer.remove(0, removeCount);
-			removeCount = 20;
-		};
 		sourceBuffer.onerror = console.error;
+		sourceBuffer.onupdateend = function(){
+			if(removing){
+				removing = false;
+				totalTime = 0;
+				sourceBuffer.remove(0, removeCount);
+				removeCount = 20;
+				return;
+			}
+
+			if(!sourceBuffer.updating && buffers.length !== 0)
+				startAppending(buffers.shift());
+		};
 	};
+
+	function startAppending(buffer){
+		sourceBuffer.appendBuffer(buffer);
+		totalTime += chunksDuration;
+		// console.log(totalTime, buffer);
+	}
 
 	scope.source.onerror = console.error;
 
@@ -33,12 +44,13 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 		if(sourceBuffer.buffered.length === 2)
 			console.log('something wrong');
 
-		sourceBuffer.appendBuffer(arrayBuffer);
-		totalTime += chunksDuration;
-		// console.log(totalTime, arrayBuffer);
-
 		if(totalTime >= 20000)
 			removing = true;
+
+		if(!sourceBuffer.updating)
+			startAppending(arrayBuffer);
+		else
+			buffers.push(arrayBuffer);
 
 		return totalTime/1000;
 	}
