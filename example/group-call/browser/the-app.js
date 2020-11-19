@@ -16,7 +16,9 @@ sf.model('the-app', function(self, root){
 		self.debugText += "\n";
 		console.log.apply(null, arguments);
 
-		var textarea = self.$el('textarea')[0];
-		textarea.scrollTop = textarea.scrollHeight;
+		setTimeout(function(){
+			var textarea = self.$el('textarea')[0];
+			textarea.scrollTop = textarea.scrollHeight - 12;
+		}, 100);
 	}
 });

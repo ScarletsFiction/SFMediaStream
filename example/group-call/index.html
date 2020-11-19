@@ -11,10 +11,12 @@
 	<!-- Bootstrap core CSS -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
 
+	<!-- I recommend for using uWebSocket.js instead of Socket.io for better performance -->
+
 	<!-- Socket IO -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 	<!-- ScarletsFrame -->
-	<script src='https://cdn.jsdelivr.net/npm/scarletsframe@0.28.5/dist/scarletsframe.min.js'></script>
+	<script src='https://cdn.jsdelivr.net/npm/scarletsframe@0.32.0/dist/scarletsframe.min.js'></script>
 	<!-- Sweet Alert -->
 	<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
@@ -31,7 +33,10 @@
 		</sf-m>
 
 		<sf-m name="presenter">
-			<div class="app-info">Presenter is for broadcasting to the streamer</div>
+			<div class="app-info">
+				Presenter is for broadcasting to the streamer<br>
+				Note: Adding an effect will also increasing presenter's volume
+			</div>
 			<div class="row">
 				<button @click="start" class="btn btn-secondary center">Presenter</button>
 				<button @click="addPingPongDelay" class="btn btn-secondary center">{{ effect ? 'Remove' : 'Add' }} an effect</button>
@@ -43,7 +48,7 @@
 		</sf-m>
 
 		<sf-m name="streamer">
-			<div class="app-info">Streamer is for listening to the presenter</div>
+			<div class="app-info">Streamer is for listening to the Presenter</div>
 			<div class="row">
     			<button @click="start" class="btn btn-secondary center">Streamer</button>
 			</div>
@@ -55,7 +60,7 @@
 						{[ <div class="col-md-12 text-center" style="font-weight: bold">~ Nothing ~</div> ]}
 					}}
 
-					<div sf-repeat-this="key,val in listening" class="presenter-list">
+					<div sf-each="key,val in listening" class="presenter-list">
 						<div class="col-md-12">
 							PresenterID: {{ key }} <b>{{ val.bufferHeader ? '(BufferHeader OK)' : '(No BufferHeader)' }}</b>
 						</div>

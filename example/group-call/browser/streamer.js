@@ -16,7 +16,7 @@ sf.model('streamer', function(self){
 	*/};
 
 	self.start = function(){
-		swal("Presenter ID:", {content:"input"}).then(create);
+		swal("Presenter's Socket ID:", {content:"input"}).then(create);
 	}
 
 	// Request bufferHeader to presenter, or create new streaming instance first

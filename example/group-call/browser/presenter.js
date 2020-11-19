@@ -85,6 +85,9 @@ sf.model('presenter', function(self){
 
 		ppDelay = ScarletsMediaEffect.pingPongDelay();
 
+		// Increase the gain by using mix when using media effect
+		ppDelay.mix(20);
+
 		// Try disconnect from presenter's original destination first
 		presenterInstance.disconnect(presenterInstance.destination);
 
