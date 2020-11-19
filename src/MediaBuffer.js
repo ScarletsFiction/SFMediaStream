@@ -4,8 +4,7 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 	scope.objectURL = URL.createObjectURL(scope.source);
 
 	var removing = false;
-	var totalTime = 0;
-	var removeCount = 10;
+	var totalTime = 0; // miliseconds
 	var sourceBuffer = null;
 	var buffers = [];
 
@@ -18,9 +17,10 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 		sourceBuffer.onupdateend = function(){
 			if(removing){
 				removing = false;
-				totalTime = 0;
-				sourceBuffer.remove(0, removeCount);
-				removeCount = 20;
+				totalTime = 10000;
+
+				// 0 ~ 10 seconds
+				sourceBuffer.remove(0, 10);
 				return;
 			}
 
