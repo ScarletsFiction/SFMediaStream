@@ -3,7 +3,12 @@
 var ScarletsMediaPresenter = function(options, latency){
 	var scope = this;
 	if(!latency) latency = 1000;
+
+	// The options are optional
 	//var options = {
+	//    mediaStream: new MediaStream(), // For custom media stream
+	//    screen: true, // Recording the screen
+	//
 	//    audio:{
 	//        channelCount:1,
 	//        echoCancellation: false
@@ -95,6 +100,8 @@ var ScarletsMediaPresenter = function(options, latency){
 			scope.recording = true;
 		};
 
+		const isVideo = options.video !== void 0;
+
 		scope.mediaRecorder.ondataavailable = function(e){
 			// Stream segments after the header was obtained
 			if(bufferHeaderLength !== false){
@@ -119,13 +126,22 @@ var ScarletsMediaPresenter = function(options, latency){
 				scope.onRecordingReady({
 					mimeType:options.mimeType,
 					startTime:Date.now(),
+					hasVideo:isVideo,
 					data:scope.bufferHeader
 				});
+
 			scope.recordingReady = true;
+			if(isVideo){
+				scope.mediaRecorder.stop();
+
+				setTimeout(function(){
+					scope.mediaRecorder.start(latency);
+				}, 10);
+			}
 		};
 
 		// Get first header
-		scope.mediaRecorder.start(latency);
+		scope.mediaRecorder.start(isVideo ? 565 : latency);
 	}
 
 	var pendingConnect = [];
@@ -167,9 +183,11 @@ var ScarletsMediaPresenter = function(options, latency){
 		if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
 
-			if(!scope.options.screen)
+			if(options.mediaStream) // Custom
+				mediaGranted(options.mediaStream);
+			else if(!scope.options.screen) // Camera / Audio
 				navigator.mediaDevices.getUserMedia(options).then(mediaGranted).catch(console.error);
-			else
+			else // Screen
 				navigator.mediaDevices.getDisplayMedia(options).then(mediaGranted).catch(console.error);
 
 			return false;
@@ -200,4 +218,12 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.bufferHeader = null;
 		scope.recording = false;
 	};
+}
+
+ScarletsMediaPresenter.isTypeSupported = function(mimeType){
+	if(!MediaSource.isTypeSupported(mimeType))
+		return "MediaSource is not supporting this type";
+	if(!MediaRecorder.isTypeSupported(mimeType))
+		return "MediaRecorder is not supporting this type";
+	return "Maybe supported";
 }
