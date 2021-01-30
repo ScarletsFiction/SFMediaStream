@@ -1,11 +1,9 @@
 /*
 	ScarletsFiction MediaStream Library
-	
+
 	HTML5 media streamer library for playing music, video, playlist,
 	or even live streaming microphone & camera with node server
 	https://github.com/ScarletsFiction/SFMediaStream
-	
-	Make sure you include this header on this script
 */
 (function(global, factory){
   if(typeof exports === 'object' && typeof module !== 'undefined'){

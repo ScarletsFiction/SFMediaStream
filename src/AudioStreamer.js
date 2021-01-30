@@ -24,6 +24,9 @@ var ScarletsAudioStreamer = function(chunksDuration){
 
 	var audioElement = new Audio();
 	var audioNode = scope.audioContext.createMediaElementSource(audioElement);
+	audioElement.addEventListener('error', function(e){
+		console.error(e.target.error);
+	});
 
 	scope.connect = function(node){
 		if(directAudioOutput === true){

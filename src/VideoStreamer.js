@@ -19,6 +19,10 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 	var mediaBuffer = false;
 	var audioNode = scope.audioContext.createMediaElementSource(videoElement);
 
+	videoElement.addEventListener('error', function(e){
+		console.error(e.target.error);
+	});
+
 	scope.audioConnect = function(node){
 		if(directAudioOutput === true){
 			directAudioOutput = false;
