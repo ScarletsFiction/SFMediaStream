@@ -122,6 +122,9 @@ var ScarletsMediaPresenter = function(options, latency){
 			scope.bufferHeader = e.data;
 			bufferHeaderLength = e.data.size;
 
+			if(bufferHeaderLength > 900 || bufferHeaderLength < 300)
+				console.log('%c[WARN] The buffer header length was more than 0.9KB or smaller than 0.3KB. This sometime cause decode error on streamer side. Try to avoid any heavy CPU usage when using the recorder.', "color:yellow");
+
 			if(scope.onRecordingReady)
 				scope.onRecordingReady({
 					mimeType:options.mimeType,
@@ -131,17 +134,18 @@ var ScarletsMediaPresenter = function(options, latency){
 				});
 
 			scope.recordingReady = true;
-			if(isVideo){
-				scope.mediaRecorder.stop();
 
-				setTimeout(function(){
-					scope.mediaRecorder.start(latency);
-				}, 10);
-			}
+			if(latency === 100) return;
+
+			// Record with the custom latency
+			scope.mediaRecorder.stop();
+			setTimeout(function(){
+				scope.mediaRecorder.start(latency);
+			}, 10);
 		};
 
 		// Get first header
-		scope.mediaRecorder.start(isVideo ? 565 : latency);
+		scope.mediaRecorder.start(isVideo ? 565 : 100);
 	}
 
 	var pendingConnect = [];

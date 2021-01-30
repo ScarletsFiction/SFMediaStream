@@ -24,6 +24,9 @@ var ScarletsAudioStreamer = function(chunksDuration){
 
 	var audioElement = new Audio();
 	var audioNode = scope.audioContext.createMediaElementSource(audioElement);
+
+	// ToDo: we may need to try to recreate the element if error happen
+	// Or reducing the extra latency
 	audioElement.addEventListener('error', function(e){
 		console.error(e.target.error);
 	});
