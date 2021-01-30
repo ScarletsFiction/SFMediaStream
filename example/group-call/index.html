@@ -16,7 +16,7 @@
 	<!-- Socket IO -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 	<!-- ScarletsFrame -->
-	<script src='https://cdn.jsdelivr.net/npm/scarletsframe@0.32.0/dist/scarletsframe.min.js'></script>
+	<script src='https://cdn.jsdelivr.net/npm/scarletsframe@0.34.5/dist/scarletsframe.min.js'></script>
 	<!-- Sweet Alert -->
 	<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
@@ -24,6 +24,8 @@
 	<script src="/dist/SFMediaStream.js"></script>
 </head>
 <body>
+	<audio id="file_test" src="/browser/test.mp3"></audio>
+
 	<div class="container">
 		<sf-m name="the-app">
 			<div class="gray-text">Your socket ID: <span>{{ id }}</span></div>
@@ -38,7 +40,7 @@
 				Note: Adding an effect will also increasing presenter's volume
 			</div>
 			<div class="row">
-				<button @click="start" class="btn btn-secondary center">Presenter</button>
+				<button @click="started ? stop() : start()" class="btn btn-secondary center">{{ started ? "Stop recording" : "Presenter" }}</button>
 				<button @click="addPingPongDelay" class="btn btn-secondary center">{{ effect ? 'Remove' : 'Add' }} an effect</button>
 			</div>
 			<div class="row little-space">

@@ -2,26 +2,26 @@
 var streamer = false;
 
 // Scope for <sf-m name="streamer">
-sf.model('streamer', function(self){
-	streamer = self;
-	self.active = false;
+sf.model('streamer', function(My){
+	streamer = My;
+	My.active = false;
 
 	// Save the stream instance for every presenter
 	// This will become RepeatedProperty datatype
-	self.listening = {/*
+	My.listening = {/*
 		presenterID: {
 			instance: new ScarletsAudioStreamer(),
 			recvBytes: 0
 		}
 	*/};
 
-	self.start = function(){
+	My.start = function(){
 		swal("Presenter's Socket ID:", {content:"input"}).then(create);
 	}
 
 	// Request bufferHeader to presenter, or create new streaming instance first
 	function create(presenterID){
-		if(self.listening[presenterID] === undefined){
+		if(My.listening[presenterID] === undefined){
 			// Set latency to 100ms (Equal with presenter)
 			var streamer = {
 				instance:new ScarletsAudioStreamer(100),
@@ -29,10 +29,10 @@ sf.model('streamer', function(self){
 				bufferHeader:false
 			};
 
-			self.active = true;
+			My.active = true;
 
 			// Set object property
-			sf.set(self.listening, presenterID, streamer);
+			sf.Obj.set(My.listening, presenterID, streamer);
 			streamer.instance.playStream();
 
 			app.debug("New streamer instance was created");
@@ -47,17 +47,17 @@ sf.model('streamer', function(self){
 		});
 	}
 
-	self.setBufferHeader = function(fromID, packet){
+	My.setBufferHeader = function(fromID, packet){
 		// Add status that we have added the buffer header to this streamer (just for HTML interface)
 		// Now we can play the presenter's stream
-		self.listening[fromID].bufferHeader = true;
+		My.listening[fromID].bufferHeader = true;
 
 		// Set buffer header to the streaming instance
-		self.listening[fromID].instance.setBufferHeader(packet);
+		My.listening[fromID].instance.setBufferHeader(packet);
 	}
 
-	self.receiveBuffer = function(presenterID, packet){
-		var presenter = self.listening[presenterID];
+	My.receiveBuffer = function(presenterID, packet){
+		var presenter = My.listening[presenterID];
 
 		if(presenter === void 0)
 			return app.debug("Why we receive buffer from ID:", presenterID, "?");
@@ -71,8 +71,8 @@ sf.model('streamer', function(self){
 	}
 
 	// Audio Effect
-	self.addEffect = function(presenterItem){
-		// presenterItem == self.listening[prensenterID]
+	My.addEffect = function(presenterItem){
+		// presenterItem == My.listening[prensenterID]
 		var presenterStream = presenterItem.instance;
 
 		app.debug("Adding sound effect to presenter");
