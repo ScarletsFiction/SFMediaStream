@@ -7,6 +7,7 @@ var ScarletsMediaPresenter = function(options, latency){
 	// The options are optional
 	//var options = {
 	//    mediaStream: new MediaStream(), // For custom media stream
+	//    element: document.querySelector(...), // Record <audio>, <video>, <canvas>
 	//    screen: true, // Recording the screen
 	//
 	//    audio:{
@@ -35,6 +36,9 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	if(options === void 0)
 		options = {};
+
+	if(options.element !== void 0)
+		options.mediaStream = options.element.captureStream();
 
 	scope.debug = options.debug;
 
@@ -122,8 +126,8 @@ var ScarletsMediaPresenter = function(options, latency){
 			scope.bufferHeader = e.data;
 			bufferHeaderLength = e.data.size;
 
-			if(bufferHeaderLength > 900 || bufferHeaderLength < 300)
-				console.log('%c[WARN] The buffer header length was more than 0.9KB or smaller than 0.3KB. This sometime cause decode error on streamer side. Try to avoid any heavy CPU usage when using the recorder.', "color:yellow");
+			if(bufferHeaderLength > 900 || bufferHeaderLength < 100)
+				console.log('%c[WARN] The buffer header length was more than 0.9KB or smaller than 0.1KB. This sometime cause decode error on streamer side. Try to avoid any heavy CPU usage when using the recorder.', "color:yellow");
 
 			if(scope.onRecordingReady)
 				scope.onRecordingReady({
@@ -183,8 +187,29 @@ var ScarletsMediaPresenter = function(options, latency){
 		}
 	}
 
+	function reAddTracks(mediaStream) {
+		var streams = mediaStream.getTracks();
+		for(var i = 0; i < streams.length; i++)
+			scope.mediaRecorder.stream.addTrack(streams[i]);
+
+		scope.mediaRecorder.start(latency);
+		scope.recording = true;
+	}
+
+	var afterStop = false;
 	scope.startRecording = function(){
-		if(scope.mediaGranted === false || scope.mediaRecorder === null){
+		if(afterStop){
+			afterStop = false;
+
+			if(!options.mediaStream){ // Not custom
+				if(!scope.options.screen) // Camera / Audio
+					navigator.mediaDevices.getUserMedia(options).then(reAddTracks).catch(console.error);
+				else // Screen
+					navigator.mediaDevices.getDisplayMedia(options).then(reAddTracks).catch(console.error);
+			}
+			return;
+		}
+		else if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
 
 			if(options.mediaStream) // Custom
@@ -196,31 +221,33 @@ var ScarletsMediaPresenter = function(options, latency){
 
 			return false;
 		}
-		else if(scope.mediaRecorder.state === 'recording')
-			return true;
-		else{
+
+		if(scope.mediaRecorder.state !== 'recording'){
 			scope.mediaRecorder.start(latency);
 			scope.recording = true;
-			return true;
 		}
+
+		return true;
 	};
 
-	// ToDo: Allow reuse instead of removing tracks when stopping
 	scope.stopRecording = function(){
+		scope.recording = false;
 		scope.mediaRecorder.stop();
-		if(!scope.mediaRecorder.stream.stop){
+
+		if(!options.mediaStream){
+			// Turn off stream from microphone/camera
 			var streams = scope.mediaRecorder.stream.getTracks();
 			for(var i = 0; i < streams.length; i++){
 				streams[i].stop();
 				scope.mediaRecorder.stream.removeTrack(streams[i]);
 			}
-		} else scope.mediaRecorder.stream.stop();
+		}
 
-		scope.mediaRecorder.ondataavailable = null;
-		scope.mediaRecorder.onstart = null;
+		// scope.mediaRecorder.ondataavailable = null;
+		// scope.mediaRecorder.onstart = null;
+		// scope.bufferHeader = null;
 
-		scope.bufferHeader = null;
-		scope.recording = false;
+		afterStop = true;
 	};
 }
 
