@@ -6,14 +6,14 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
 	<title>Streaming Test</title>
 	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
-	<script type="text/javascript" src="/SFMediaStream.min.js"></script>
+	<script type="text/javascript" src="/dist/SFMediaStream.min.js"></script>
 </head>
 <body>
 	<button onclick="asPresenter()">Presenter</button>
 	<button onclick="asStreamer()">Streamer</button>
 	<button onclick="streamerEffect()">Effect (for streamer)</button>
 	<input type="text" id="debug"><br>
-	Presenter must be online before the streamer. <a href="/">try only audio</a>
+	<div>This will be buggy around 30sec '-', extra delay around 7 second</div>
 	<br>
 	<video id="myVideoElement"></video>
 
@@ -25,20 +25,21 @@
 		var presenterMedia = false;
 		function asPresenter(){
 			if(presenterMedia === false){
-				// Set latency to 2000ms (Equal with streamer)
+				// Set latency to 565ms (Equal with streamer)
 				presenterMedia = new ScarletsMediaPresenter({
-				    audio:{
-				        channelCount:1,
-				        echoCancellation: false
-				    },
+					mimeType: 'video/webm; codecs="vp8,opus"',
+				    // audio:{
+				    //     channelCount:1,
+				    //     echoCancellation: false
+				    // },
 				    video:{
 						frameRate:15,
-						width: 320,
-						height: 240,
+						width: 800,
+						height: 600,
 						// facingMode: (front ? "user" : "environment")
 					},
 				    debug:true
-				}, 2000);
+				}, 5000);
 
 				presenterMedia.onRecordingReady = function(packet){
 				    console.log("Recording started!");
@@ -61,8 +62,8 @@
 		var videoStreamer = false;
 		function asStreamer(){
 			if(videoStreamer === false){
-				// Set latency to 2000ms (Equal with presenter)
-				videoStreamer = new ScarletsVideoStreamer(myVideoElement, 2000);
+				// Set latency to 565ms (Equal with presenter)
+				videoStreamer = new ScarletsVideoStreamer(myVideoElement, 5000);
 				videoStreamer.playStream();
 
 				// Buffer header must be received first
