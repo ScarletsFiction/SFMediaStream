@@ -17,7 +17,6 @@ gulp.task('js', function(){
     ]))
     .pipe(concat('SFMediaStream.js'))
     .pipe(gulp.dest('dist'))
-    
     .pipe(rename('SFMediaStream.min.js'))
     .pipe(babel({
       "presets": [
@@ -25,10 +24,11 @@ gulp.task('js', function(){
           "@babel/preset-env",
           {
             "targets": {
-              "ie": "9"
+              "ie": "11"
             },
-            "loose":true,
-            "modules": false
+            modules: false,
+            loose: false,
+            shippedProposals: true
           }
         ]
       ]
