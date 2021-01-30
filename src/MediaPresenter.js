@@ -129,7 +129,7 @@ var ScarletsMediaPresenter = function(options, latency){
 			if(predefinedBuffer !== false)
 				scope.bufferHeader = predefinedBuffer;
 
-			bufferHeaderLength = e.data.size;
+			bufferHeaderLength = scope.bufferHeader.size;
 
 			if(bufferHeaderLength > 900 || bufferHeaderLength < 100)
 				console.log('%c[WARN] The buffer header length was more than 0.9KB or smaller than 0.1KB. This sometime cause decode error on streamer side. Try to avoid any heavy CPU usage when using the recorder.', "color:yellow");

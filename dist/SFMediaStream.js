@@ -1,11 +1,9 @@
 /*
 	ScarletsFiction MediaStream Library
-	
+
 	HTML5 media streamer library for playing music, video, playlist,
 	or even live streaming microphone & camera with node server
 	https://github.com/ScarletsFiction/SFMediaStream
-	
-	Make sure you include this header on this script
 */
 (function(global, factory){
   if(typeof exports === 'object' && typeof module !== 'undefined'){
@@ -115,8 +113,14 @@ var ScarletsAudioStreamer = function(chunksDuration){
 	var bufferHeader = false;
 	var mediaBuffer = false;
 
-	var audioElement = new Audio();
+	var audioElement = scope.element = new Audio();
 	var audioNode = scope.audioContext.createMediaElementSource(audioElement);
+
+	// ToDo: we may need to try to recreate the element if error happen
+	// Or reducing the extra latency
+	audioElement.addEventListener('error', function(e){
+		console.error(e.target.error);
+	});
 
 	scope.connect = function(node){
 		if(directAudioOutput === true){
@@ -260,6 +264,25 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		if(scope.debug) console.log("Total latency: "+scope.latency);
 	}
 }
+var BufferHeader = {
+	"audio/webm;codecs=opus": "GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQRChYECGFOAZwH/////////FUmpZpkq17GDD0JATYCGQ2hyb21lV0GGQ2hyb21lFlSua7+uvdeBAXPFh7o5nyc1kHqDgQKGhkFfT1BVU2Oik09wdXNIZWFkAQIAAIC7AAAAAADhjbWERzuAAJ+BAmJkgSAfQ7Z1Af/////////ngQCjjIEAAID/A//+//7//qM="
+};
+
+function getBufferHeader(type) {
+	var buff = BufferHeader[type];
+	if(buff === void 0) return false;
+
+	if(buff.constructor === Blob)
+		return buff;
+
+	buff = atob(buff);
+
+	var UInt = new Uint8Array(buff.length);
+	for (var i = 0; i < buff.length; i++)
+		UInt[i] = buff.charCodeAt(i);
+
+	return BufferHeader[type] = new Blob([UInt]);
+}
 ScarletsMedia.convert = {
 	// Converts a MIDI pitch number to frequency.
 	// midi = 0 ~ 127
@@ -326,7 +349,10 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 		sourceBuffer.mode = 'sequence';
 		sourceBuffer.appendBuffer(bufferHeader);
 
-		sourceBuffer.onerror = console.error;
+		sourceBuffer.onerror = function(e){
+			console.error("SourceBuffer error:", e);
+		}
+
 		sourceBuffer.onupdateend = function(){
 			if(removing){
 				removing = false;
@@ -348,7 +374,9 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 		// console.log(totalTime, buffer);
 	}
 
-	scope.source.onerror = console.error;
+	scope.source.onerror = function(e){
+		console.error("MediaSource error:", e);
+	}
 
 	scope.append = function(arrayBuffer){
 		if(sourceBuffer === null)
@@ -450,6 +478,11 @@ var ScarletsMediaPlayer = function(element){
 	self.mute = function(set){
 		if(set === undefined) return element.muted;
 		element.defaultMuted = element.muted = set;
+	}
+
+	self.stop = function(){
+		self.pause();
+		self.currentTime = 0;
 	}
 
 	var volume = 1;
@@ -639,26 +672,26 @@ var ScarletsMediaPlayer = function(element){
 		shuffled:false,
 
 		// lists = [{yourProperty:'', stream:['main.mp3', 'fallback.ogg', ..]}, ...]
-		reload:function(lists){
+		reload(lists){
 			this.original = lists;
 			this.shuffle(this.shuffled);
 			internalPlaylistEvent();
 		},
 
 		// obj = {yourProperty:'', stream:['main.mp3', 'fallback.ogg']}
-		add:function(obj){
+		add(obj){
 			this.original.push(obj);
 			this.shuffle(this.shuffled);
 			internalPlaylistEvent();
 		},
 
 		// index from 'original' property
-		remove:function(index){
+		remove(index){
 			this.original.splice(index, 1);
 			this.shuffle(this.shuffled);
 		},
 
-		next:function(autoplay){
+		next(autoplay){
 			this.currentIndex++;
 			if(this.currentIndex >= this.list.length){
 				if(this.loop)
@@ -674,7 +707,7 @@ var ScarletsMediaPlayer = function(element){
 			else playlistTriggerEvent('playlistchange');
 		},
 
-		previous:function(autoplay){
+		previous(autoplay){
 			this.currentIndex--;
 			if(this.currentIndex < 0){
 				if(this.loop)
@@ -690,16 +723,19 @@ var ScarletsMediaPlayer = function(element){
 			else playlistTriggerEvent('playlistchange');
 		},
 
-		play:function(index){
+		play(index){
 			this.currentIndex = index;
 			playlistTriggerEvent('playlistchange');
 
-			self.prepare(this.list[index].stream, function(){
+			var src = this.list[index].stream;
+			if(self.currentSrc === src)
+				self.play();
+			else self.prepare(this.list[index].stream, function(){
 				self.play();
 			});
 		},
 
-		shuffle:function(set){
+		shuffle(set){
 			if(set === true){
 			    var j, x, i;
 			    for (i = this.list.length - 1; i > 0; i--) {
@@ -720,7 +756,13 @@ var ScarletsMediaPlayer = function(element){
 var ScarletsMediaPresenter = function(options, latency){
 	var scope = this;
 	if(!latency) latency = 1000;
+
+	// The options are optional
 	//var options = {
+	//    mediaStream: new MediaStream(), // For custom media stream
+	//    element: document.querySelector(...), // Record <audio>, <video>, <canvas>
+	//    screen: true, // Recording the screen
+	//
 	//    audio:{
 	//        channelCount:1,
 	//        echoCancellation: false
@@ -748,6 +790,9 @@ var ScarletsMediaPresenter = function(options, latency){
 	if(options === void 0)
 		options = {};
 
+	if(options.element !== void 0)
+		options.mediaStream = options.element.captureStream();
+
 	scope.debug = options.debug;
 
 	// Deprecated
@@ -767,7 +812,7 @@ var ScarletsMediaPresenter = function(options, latency){
 			var codecs = codecsList[format];
 
 			for (var i = 0; i < codecs.length; i++) {
-				var temp = mimeType+';codecs="'+codecs[i]+'"';
+				var temp = mimeType+';codecs='+codecs[i];
 				if(MediaRecorder.isTypeSupported(temp) && MediaSource.isTypeSupported(temp)){
 					supportedMimeType = temp;
 					break;
@@ -812,6 +857,8 @@ var ScarletsMediaPresenter = function(options, latency){
 			scope.recording = true;
 		};
 
+		const isVideo = options.video !== void 0;
+
 		scope.mediaRecorder.ondataavailable = function(e){
 			// Stream segments after the header was obtained
 			if(bufferHeaderLength !== false){
@@ -830,19 +877,37 @@ var ScarletsMediaPresenter = function(options, latency){
 			// So we will need to remove it on streamer side
 			// Because the AudioBuffer can't be converted to ArrayBuffer with WebAudioAPI
 			scope.bufferHeader = e.data;
-			bufferHeaderLength = e.data.size;
+
+			var predefinedBuffer = getBufferHeader(scope.mediaRecorder.mimeType);
+			if(predefinedBuffer !== false)
+				scope.bufferHeader = predefinedBuffer;
+
+			bufferHeaderLength = scope.bufferHeader.size;
+
+			if(bufferHeaderLength > 900 || bufferHeaderLength < 100)
+				console.log('%c[WARN] The buffer header length was more than 0.9KB or smaller than 0.1KB. This sometime cause decode error on streamer side. Try to avoid any heavy CPU usage when using the recorder.', "color:yellow");
 
 			if(scope.onRecordingReady)
 				scope.onRecordingReady({
 					mimeType:options.mimeType,
 					startTime:Date.now(),
+					hasVideo:isVideo,
 					data:scope.bufferHeader
 				});
+
 			scope.recordingReady = true;
+
+			if(latency === 100) return;
+
+			// Record with the custom latency
+			scope.mediaRecorder.stop();
+			setTimeout(function(){
+				scope.mediaRecorder.start(latency);
+			}, 10);
 		};
 
 		// Get first header
-		scope.mediaRecorder.start(latency);
+		scope.mediaRecorder.start(isVideo ? 565 : 100);
 	}
 
 	var pendingConnect = [];
@@ -880,43 +945,76 @@ var ScarletsMediaPresenter = function(options, latency){
 		}
 	}
 
+	function reAddTracks(mediaStream) {
+		var streams = mediaStream.getTracks();
+		for(var i = 0; i < streams.length; i++)
+			scope.mediaRecorder.stream.addTrack(streams[i]);
+
+		scope.mediaRecorder.start(latency);
+		scope.recording = true;
+	}
+
+	var afterStop = false;
 	scope.startRecording = function(){
-		if(scope.mediaGranted === false || scope.mediaRecorder === null){
+		if(afterStop){
+			afterStop = false;
+
+			if(!options.mediaStream){ // Not custom
+				if(!scope.options.screen) // Camera / Audio
+					navigator.mediaDevices.getUserMedia(options).then(reAddTracks).catch(console.error);
+				else // Screen
+					navigator.mediaDevices.getDisplayMedia(options).then(reAddTracks).catch(console.error);
+			}
+			return;
+		}
+		else if(scope.mediaGranted === false || scope.mediaRecorder === null){
 			scope.recordingReady = false;
 
-			if(!scope.options.screen)
+			if(options.mediaStream) // Custom
+				mediaGranted(options.mediaStream);
+			else if(!scope.options.screen) // Camera / Audio
 				navigator.mediaDevices.getUserMedia(options).then(mediaGranted).catch(console.error);
-			else
+			else // Screen
 				navigator.mediaDevices.getDisplayMedia(options).then(mediaGranted).catch(console.error);
 
 			return false;
 		}
-		else if(scope.mediaRecorder.state === 'recording')
-			return true;
-		else{
+
+		if(scope.mediaRecorder.state !== 'recording'){
 			scope.mediaRecorder.start(latency);
 			scope.recording = true;
-			return true;
 		}
+
+		return true;
 	};
 
-	// ToDo: Allow reuse instead of removing tracks when stopping
 	scope.stopRecording = function(){
+		scope.recording = false;
 		scope.mediaRecorder.stop();
-		if(!scope.mediaRecorder.stream.stop){
+
+		if(!options.mediaStream){
+			// Turn off stream from microphone/camera
 			var streams = scope.mediaRecorder.stream.getTracks();
 			for(var i = 0; i < streams.length; i++){
 				streams[i].stop();
 				scope.mediaRecorder.stream.removeTrack(streams[i]);
 			}
-		} else scope.mediaRecorder.stream.stop();
+		}
 
-		scope.mediaRecorder.ondataavailable = null;
-		scope.mediaRecorder.onstart = null;
+		// scope.mediaRecorder.ondataavailable = null;
+		// scope.mediaRecorder.onstart = null;
+		// scope.bufferHeader = null;
 
-		scope.bufferHeader = null;
-		scope.recording = false;
+		afterStop = true;
 	};
+}
+
+ScarletsMediaPresenter.isTypeSupported = function(mimeType){
+	if(!MediaSource.isTypeSupported(mimeType))
+		return "MediaSource is not supporting this type";
+	if(!MediaRecorder.isTypeSupported(mimeType))
+		return "MediaRecorder is not supporting this type";
+	return "Maybe supported";
 }
 ScarletsMediaEffect.chorus = function(sourceNode){
 	var context = ScarletsMedia.audioContext;
@@ -2212,6 +2310,10 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 
 	var mediaBuffer = false;
 	var audioNode = scope.audioContext.createMediaElementSource(videoElement);
+
+	videoElement.addEventListener('error', function(e){
+		console.error(e.target.error);
+	});
 
 	scope.audioConnect = function(node){
 		if(directAudioOutput === true){
