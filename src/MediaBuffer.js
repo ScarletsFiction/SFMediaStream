@@ -13,7 +13,10 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 		sourceBuffer.mode = 'sequence';
 		sourceBuffer.appendBuffer(bufferHeader);
 
-		sourceBuffer.onerror = console.error;
+		sourceBuffer.onerror = function(e){
+			console.error("SourceBuffer error:", e);
+		}
+
 		sourceBuffer.onupdateend = function(){
 			if(removing){
 				removing = false;
@@ -35,7 +38,9 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 		// console.log(totalTime, buffer);
 	}
 
-	scope.source.onerror = console.error;
+	scope.source.onerror = function(e){
+		console.error("MediaSource error:", e);
+	}
 
 	scope.append = function(arrayBuffer){
 		if(sourceBuffer === null)

@@ -74,6 +74,11 @@ var ScarletsMediaPlayer = function(element){
 		element.defaultMuted = element.muted = set;
 	}
 
+	self.stop = function(){
+		self.pause();
+		self.currentTime = 0;
+	}
+
 	var volume = 1;
 	self.volume = function(set){
 		if(set === undefined) return volume;
@@ -261,26 +266,26 @@ var ScarletsMediaPlayer = function(element){
 		shuffled:false,
 
 		// lists = [{yourProperty:'', stream:['main.mp3', 'fallback.ogg', ..]}, ...]
-		reload:function(lists){
+		reload(lists){
 			this.original = lists;
 			this.shuffle(this.shuffled);
 			internalPlaylistEvent();
 		},
 
 		// obj = {yourProperty:'', stream:['main.mp3', 'fallback.ogg']}
-		add:function(obj){
+		add(obj){
 			this.original.push(obj);
 			this.shuffle(this.shuffled);
 			internalPlaylistEvent();
 		},
 
 		// index from 'original' property
-		remove:function(index){
+		remove(index){
 			this.original.splice(index, 1);
 			this.shuffle(this.shuffled);
 		},
 
-		next:function(autoplay){
+		next(autoplay){
 			this.currentIndex++;
 			if(this.currentIndex >= this.list.length){
 				if(this.loop)
@@ -296,7 +301,7 @@ var ScarletsMediaPlayer = function(element){
 			else playlistTriggerEvent('playlistchange');
 		},
 
-		previous:function(autoplay){
+		previous(autoplay){
 			this.currentIndex--;
 			if(this.currentIndex < 0){
 				if(this.loop)
@@ -312,16 +317,19 @@ var ScarletsMediaPlayer = function(element){
 			else playlistTriggerEvent('playlistchange');
 		},
 
-		play:function(index){
+		play(index){
 			this.currentIndex = index;
 			playlistTriggerEvent('playlistchange');
 
-			self.prepare(this.list[index].stream, function(){
+			var src = this.list[index].stream;
+			if(self.currentSrc === src)
+				self.play();
+			else self.prepare(this.list[index].stream, function(){
 				self.play();
 			});
 		},
 
-		shuffle:function(set){
+		shuffle(set){
 			if(set === true){
 			    var j, x, i;
 			    for (i = this.list.length - 1; i > 0; i--) {
