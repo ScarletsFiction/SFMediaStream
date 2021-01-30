@@ -22,7 +22,7 @@ var ScarletsAudioStreamer = function(chunksDuration){
 	var bufferHeader = false;
 	var mediaBuffer = false;
 
-	var audioElement = new Audio();
+	var audioElement = scope.element = new Audio();
 	var audioNode = scope.audioContext.createMediaElementSource(audioElement);
 
 	// ToDo: we may need to try to recreate the element if error happen
