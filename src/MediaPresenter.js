@@ -59,7 +59,7 @@ var ScarletsMediaPresenter = function(options, latency){
 			var codecs = codecsList[format];
 
 			for (var i = 0; i < codecs.length; i++) {
-				var temp = mimeType+';codecs="'+codecs[i]+'"';
+				var temp = mimeType+';codecs='+codecs[i];
 				if(MediaRecorder.isTypeSupported(temp) && MediaSource.isTypeSupported(temp)){
 					supportedMimeType = temp;
 					break;
@@ -124,6 +124,11 @@ var ScarletsMediaPresenter = function(options, latency){
 			// So we will need to remove it on streamer side
 			// Because the AudioBuffer can't be converted to ArrayBuffer with WebAudioAPI
 			scope.bufferHeader = e.data;
+
+			var predefinedBuffer = getBufferHeader(scope.mediaRecorder.mimeType);
+			if(predefinedBuffer !== false)
+				scope.bufferHeader = predefinedBuffer;
+
 			bufferHeaderLength = e.data.size;
 
 			if(bufferHeaderLength > 900 || bufferHeaderLength < 100)
