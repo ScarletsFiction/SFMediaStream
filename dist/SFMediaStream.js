@@ -91,8 +91,6 @@ var userInteracted = false;
 })();
 // Minimum 3 bufferElement
 var ScarletsAudioStreamer = function(chunksDuration){
-	var bufferElement = 3;
-
 	if(!chunksDuration) chunksDuration = 1000;
 	var chunksSeconds = chunksDuration/1000;
 
@@ -103,6 +101,8 @@ var ScarletsAudioStreamer = function(chunksDuration){
 	scope.latency = 0;
 	scope.mimeType = null;
 	scope.bufferElement = [];
+
+	scope.onStop = null;
 
 	scope.audioContext = ScarletsMedia.audioContext;
 	scope.outputNode = false; // Set this to a connectable Audio Node
@@ -145,6 +145,7 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		mediaBuffer.stop();
 		scope.playing = false;
 		scope.buffering = false;
+		if (scope.onStop) scope.onStop();
 	}
 
 	scope.setBufferHeader = function(packet){
@@ -227,14 +228,16 @@ var ScarletsAudioStreamer = function(chunksDuration){
 	}
 
 	var bufferElementIndex = 0;
-	scope.realtimeBufferPlay = function(arrayBuffer){
+	scope.realtimeBufferPlay = function(packet){
 		if(scope.playing === false) return;
 
-		if(scope.debug) console.log("Receiving data", arrayBuffer[0].byteLength);
-		if(arrayBuffer[0].byteLength === 0) return;
-		arrayBuffer = arrayBuffer[0];
+		var arrayBuffer = packet[0];
+		var streamingTime = packet[1];
 
-		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + chunksSeconds + scope.audioContext.baseLatency;
+		if(scope.debug) console.log("Receiving data", arrayBuffer.byteLength);
+		if(arrayBuffer.byteLength === 0) return;
+
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - streamingTime) + chunksSeconds + scope.audioContext.baseLatency;
 
 		var index = bufferElementIndex;
 		bufferElementIndex++;
@@ -252,18 +255,22 @@ var ScarletsAudioStreamer = function(chunksDuration){
 	// ====== Synchronous Playing ======
 	// Play next audio when last audio was finished
 
-	scope.receiveBuffer = function(arrayBuffer){
+	scope.receiveBuffer = function(packet){
 		if(scope.playing === false || !mediaBuffer.append) return;
 
-		mediaBuffer.append(arrayBuffer[0]);
+		var arrayBuffer = packet[0];
+		var streamingTime = packet[1];
+
+		mediaBuffer.append(arrayBuffer);
 
 		if(audioElement.paused)
 			audioElement.play();
 
-		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) +  scope.audioContext.baseLatency + chunksSeconds;
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - streamingTime) +  scope.audioContext.baseLatency + chunksSeconds;
 		if(scope.debug) console.log("Total latency: "+scope.latency);
 	}
 }
+
 var BufferHeader = {
 	"audio/webm;codecs=opus": "GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQRChYECGFOAZwH/////////FUmpZpkq17GDD0JATYCGQ2hyb21lV0GGQ2hyb21lFlSua7+uvdeBAXPFh7o5nyc1kHqDgQKGhkFfT1BVU2Oik09wdXNIZWFkAQIAAIC7AAAAAADhjbWERzuAAJ+BAmJkgSAfQ7Z1Af/////////ngQCjjIEAAID/A//+//7//qM="
 };
@@ -780,6 +787,7 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	scope.onRecordingReady = null;
 	scope.onBufferProcess = null;
+	scope.onStop = null;
 
 	scope.mediaRecorder = null;
 	scope.recordingReady = false;
@@ -798,11 +806,14 @@ var ScarletsMediaPresenter = function(options, latency){
 	// Deprecated
 	scope.options = options;
 
-	scope.polyfill = void 0;
-
 	var mediaType = options.video ? 'video' : 'audio';
 
 	// Check supported mimeType and codecs for the recorder
+	if (options.mimeType && !MediaRecorder.isTypeSupported(options.mimeType)) {
+		console.log("MediaRecorder doesn't supports mimetype " + options.mimeType);
+		options.mimeType = null;
+	}
+
 	if(!options.mimeType){
 		var supportedMimeType = false;
 		var codecsList = mediaType === 'audio' ? audioCodecs : videoCodecs;
@@ -826,7 +837,8 @@ var ScarletsMediaPresenter = function(options, latency){
 				break;
 		}
 		options.mimeType = supportedMimeType;
-		console.log("mimeType: "+supportedMimeType);
+
+		if (scope.debug) console.log("mimeType: "+supportedMimeType);
 	}
 
 	var mediaGranted = function(mediaStream) {
@@ -850,7 +862,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream, options, scope.polyfill);
+		scope.mediaRecorder = new MediaRecorder(mediaStream);
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -858,10 +870,11 @@ var ScarletsMediaPresenter = function(options, latency){
 		};
 
 		const isVideo = options.video !== void 0;
+		const headerLatency = isVideo ? 565 : 100;
 
 		scope.mediaRecorder.ondataavailable = function(e){
 			// Stream segments after the header was obtained
-			if(bufferHeaderLength !== false){
+			if (scope.bufferHeader && bufferHeaderLength !== false){
 				var streamingTime = Number(String(Date.now()).slice(-5, -3));
 				scope.onBufferProcess([e.data, streamingTime]);
 				return;
@@ -897,7 +910,7 @@ var ScarletsMediaPresenter = function(options, latency){
 
 			scope.recordingReady = true;
 
-			if(latency === 100) return;
+			if(latency === headerLatency) return;
 
 			// Record with the custom latency
 			scope.mediaRecorder.stop();
@@ -907,7 +920,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		};
 
 		// Get first header
-		scope.mediaRecorder.start(isVideo ? 565 : 100);
+		scope.mediaRecorder.start(headerLatency);
 	}
 
 	var pendingConnect = [];
@@ -1003,9 +1016,12 @@ var ScarletsMediaPresenter = function(options, latency){
 
 		// scope.mediaRecorder.ondataavailable = null;
 		// scope.mediaRecorder.onstart = null;
-		// scope.bufferHeader = null;
+
+		scope.bufferHeader = null;
 
 		afterStop = true;
+
+		if (scope.onStop) scope.onStop();
 	};
 }
 
@@ -1016,6 +1032,7 @@ ScarletsMediaPresenter.isTypeSupported = function(mimeType){
 		return "MediaRecorder is not supporting this type";
 	return "Maybe supported";
 }
+
 ScarletsMediaEffect.chorus = function(sourceNode){
 	var context = ScarletsMedia.audioContext;
 	var output = context.createGain();
@@ -2353,7 +2370,6 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 
 		mediaBuffer = new MediaBuffer(scope.mimeType, chunksDuration, arrayBuffer);
 
-		console.log(mediaBuffer);
 		videoElement.src = scope.objectURL = mediaBuffer.objectURL;
 	}
 
@@ -2361,18 +2377,22 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 		scope.playing = true;
 	}
 
-	scope.receiveBuffer = function(arrayBuffer){
+	scope.receiveBuffer = function(packet){
 		if(scope.playing === false || !mediaBuffer.append) return;
 
-		mediaBuffer.append(arrayBuffer[0]);
+		var arrayBuffer = packet[0];
+		var streamingTime = packet[1];
+		
+		mediaBuffer.append(arrayBuffer[);
 
 		if(videoElement.paused)
 			videoElement.play();
 
-		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + scope.audioContext.baseLatency + chunksSeconds;
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - streamingTime) + scope.audioContext.baseLatency + chunksSeconds;
 		if(scope.debug) console.log("Total latency: "+scope.latency);
 	}
 }
+
 ScarletsMedia.extra = new function(){
 	var self = this;
 	self.isMobile = function(){

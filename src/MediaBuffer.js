@@ -46,7 +46,9 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 		if(sourceBuffer === null)
 			return false;
 
-		if(sourceBuffer.buffered.length === 2)
+		if (!sourceBuffer.updating && sourceBuffer.buffered.length === 2)
+			// The problem of accessing to 'sourceBuffer.buffered' is that after you append data, the SourceBuffer instance becomes temporarily unusable while it's working.
+			// During this time, the SourceBuffer's updating property will be set to true, so it's easy to check for.
 			console.log('something wrong');
 
 		if(totalTime >= 20000)

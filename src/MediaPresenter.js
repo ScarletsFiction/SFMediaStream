@@ -27,6 +27,7 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	scope.onRecordingReady = null;
 	scope.onBufferProcess = null;
+	scope.onStop = null;
 
 	scope.mediaRecorder = null;
 	scope.recordingReady = false;
@@ -45,11 +46,14 @@ var ScarletsMediaPresenter = function(options, latency){
 	// Deprecated
 	scope.options = options;
 
-	scope.polyfill = void 0;
-
 	var mediaType = options.video ? 'video' : 'audio';
 
 	// Check supported mimeType and codecs for the recorder
+	if (options.mimeType && !MediaRecorder.isTypeSupported(options.mimeType)) {
+		console.log("MediaRecorder doesn't supports mimetype " + options.mimeType);
+		options.mimeType = null;
+	}
+
 	if(!options.mimeType){
 		var supportedMimeType = false;
 		var codecsList = mediaType === 'audio' ? audioCodecs : videoCodecs;
@@ -73,7 +77,8 @@ var ScarletsMediaPresenter = function(options, latency){
 				break;
 		}
 		options.mimeType = supportedMimeType;
-		console.log("mimeType: "+supportedMimeType);
+
+		if (scope.debug) console.log("mimeType: "+supportedMimeType);
 	}
 
 	var mediaGranted = function(mediaStream) {
@@ -97,7 +102,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream, options, scope.polyfill);
+		scope.mediaRecorder = new MediaRecorder(mediaStream, options);
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -105,10 +110,11 @@ var ScarletsMediaPresenter = function(options, latency){
 		};
 
 		const isVideo = options.video !== void 0;
+		const headerLatency = isVideo ? 565 : 100;
 
 		scope.mediaRecorder.ondataavailable = function(e){
 			// Stream segments after the header was obtained
-			if(bufferHeaderLength !== false){
+			if (bufferHeaderLength !== false){
 				var streamingTime = Number(String(Date.now()).slice(-5, -3));
 				scope.onBufferProcess([e.data, streamingTime]);
 				return;
@@ -144,7 +150,7 @@ var ScarletsMediaPresenter = function(options, latency){
 
 			scope.recordingReady = true;
 
-			if(latency === 100) return;
+			if(latency === headerLatency) return;
 
 			// Record with the custom latency
 			scope.mediaRecorder.stop();
@@ -154,7 +160,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		};
 
 		// Get first header
-		scope.mediaRecorder.start(isVideo ? 565 : 100);
+		scope.mediaRecorder.start(headerLatency);
 	}
 
 	var pendingConnect = [];
@@ -250,9 +256,12 @@ var ScarletsMediaPresenter = function(options, latency){
 
 		// scope.mediaRecorder.ondataavailable = null;
 		// scope.mediaRecorder.onstart = null;
-		// scope.bufferHeader = null;
+
+		scope.bufferHeader = null;
 
 		afterStop = true;
+
+		if (scope.onStop) scope.onStop();
 	};
 }
 
