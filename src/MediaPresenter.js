@@ -242,6 +242,9 @@ var ScarletsMediaPresenter = function(options, latency){
 	};
 
 	scope.stopRecording = function(){
+		if (!scope.recording ||!scope.mediaRecorder) {
+			return;
+		}
 		scope.recording = false;
 		scope.mediaRecorder.stop();
 

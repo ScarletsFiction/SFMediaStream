@@ -276,6 +276,11 @@ var BufferHeader = {
 };
 
 function getBufferHeader(type) {
+	if (!window.chrome && type === "audio/webm;codecs=opus" ) {
+		// this header is only for chrome based brosers
+		return false;
+	}
+
 	var buff = BufferHeader[type];
 	if(buff === void 0) return false;
 
@@ -389,7 +394,9 @@ var MediaBuffer = function(mimeType, chunksDuration, bufferHeader){
 		if(sourceBuffer === null)
 			return false;
 
-		if(sourceBuffer.buffered.length === 2)
+		if (!sourceBuffer.updating && sourceBuffer.buffered.length === 2)
+			// The problem of accessing to 'sourceBuffer.buffered' is that after you append data, the SourceBuffer instance becomes temporarily unusable while it's working.
+			// During this time, the SourceBuffer's updating property will be set to true, so it's easy to check for.
 			console.log('something wrong');
 
 		if(totalTime >= 20000)
@@ -862,7 +869,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream);
+		scope.mediaRecorder = new MediaRecorder(mediaStream, options);
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -874,7 +881,7 @@ var ScarletsMediaPresenter = function(options, latency){
 
 		scope.mediaRecorder.ondataavailable = function(e){
 			// Stream segments after the header was obtained
-			if (scope.bufferHeader && bufferHeaderLength !== false){
+			if (bufferHeaderLength !== false){
 				var streamingTime = Number(String(Date.now()).slice(-5, -3));
 				scope.onBufferProcess([e.data, streamingTime]);
 				return;
@@ -1003,6 +1010,9 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	scope.stopRecording = function(){
 		scope.recording = false;
+		if (!scope.recording ||!scope.mediaRecorder) {
+			return;
+		}
 		scope.mediaRecorder.stop();
 
 		if(!options.mediaStream){
@@ -2382,8 +2392,8 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 
 		var arrayBuffer = packet[0];
 		var streamingTime = packet[1];
-		
-		mediaBuffer.append(arrayBuffer[);
+
+		mediaBuffer.append(arrayBuffer);
 
 		if(videoElement.paused)
 			videoElement.play();
