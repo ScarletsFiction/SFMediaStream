@@ -1009,10 +1009,10 @@ var ScarletsMediaPresenter = function(options, latency){
 	};
 
 	scope.stopRecording = function(){
-		scope.recording = false;
 		if (!scope.recording ||!scope.mediaRecorder) {
 			return;
 		}
+		scope.recording = false;
 		scope.mediaRecorder.stop();
 
 		if(!options.mediaStream){
