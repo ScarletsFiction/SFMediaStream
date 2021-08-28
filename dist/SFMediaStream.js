@@ -216,7 +216,7 @@ var ScarletsAudioStreamer = function(chunksDuration){
 			scope.bufferElement[index].connect(scope.outputNode);
 
 		else // Direct output to destination
-			scope.bufferElement[index].connect(scope.audioContext.destinatgion);
+			scope.bufferElement[index].connect(scope.audioContext.destination);
 		return true;
 	}
 
@@ -2575,7 +2575,7 @@ else{
 	global.ScarletsVideoStreamer = ScarletsVideoStreamer;
 	global.ScarletsMediaPlayer = ScarletsMediaPlayer;
 	global.ScarletsMediaPresenter = ScarletsMediaPresenter;
-	global.MediaBuffer = MediaBuffer;
+	global.ScarletsMediaBuffer = MediaBuffer;
 }
 
 // ===== Module End =====

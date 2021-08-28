@@ -170,7 +170,7 @@ else{
 	global.ScarletsVideoStreamer = ScarletsVideoStreamer;
 	global.ScarletsMediaPlayer = ScarletsMediaPlayer;
 	global.ScarletsMediaPresenter = ScarletsMediaPresenter;
-	global.MediaBuffer = MediaBuffer;
+	global.ScarletsMediaBuffer = MediaBuffer;
 }
 
 // ===== Module End =====
