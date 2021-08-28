@@ -2566,7 +2566,7 @@ if(moduleMode){
 	global.VideoStreamer = ScarletsVideoStreamer;
 	global.MediaPlayer = ScarletsMediaPlayer;
 	global.MediaPresenter = ScarletsMediaPresenter;
-	global.MediaBuffer = MediaBuffer;
+	global.ScarletsMediaBuffer = MediaBuffer;
 }
 else{
 	global.ScarletsMedia = ScarletsMedia;
