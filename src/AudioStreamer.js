@@ -125,7 +125,7 @@ var ScarletsAudioStreamer = function(chunksDuration){
 			scope.bufferElement[index].connect(scope.outputNode);
 
 		else // Direct output to destination
-			scope.bufferElement[index].connect(scope.audioContext.destinatgion);
+			scope.bufferElement[index].connect(scope.audioContext.destination);
 		return true;
 	}
 
