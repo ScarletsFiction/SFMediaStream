@@ -827,6 +827,9 @@ var ScarletsMediaPresenter = function(options, latency){
 			usingOpusMediaRecorderPolyfill = true;
 		}
 		else if(!window.MediaRecorder) {
+			if (!options.mimeType) {
+				options.mimeType = 'audio/webm;codecs=opus'; // Preferred one
+			}
 			usingOpusMediaRecorderPolyfill = OpusMediaRecorder.isTypeSupported(options.mimeType);
 		}
 		else if(options.mimeType && MediaRecorder.isTypeSupported(options.mimeType)) {

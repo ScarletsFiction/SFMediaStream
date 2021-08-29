@@ -56,7 +56,7 @@ sf.model('presenter', function(My){
 		// Set latency to 100ms (Equal with streamer)
 		const latency = 100;
 		presenterInstance = new ScarletsMediaPresenter({
-			// mimeType:'audio/webm;codecs=opus', // Optional
+			mimeType:'audio/webm;codecs=opus', // Optional
 			element, // Optional
 		    audio:{
 		        channelCount:1,
@@ -66,10 +66,10 @@ sf.model('presenter', function(My){
 			// uncomment this for use OpusMediaRecorder polyfill as fallback
 			// (find globally #2908210050 for all related references in this project)
 			// alwaysUsePolyfill:false,  // Optional
-			// workerOptions:{
-			// 	OggOpusEncoderWasmPath:'https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/OggOpusEncoder.wasm',
-			// 	WebMOpusEncoderWasmPath:'https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/WebMOpusEncoder.wasm'
-			// }
+			workerOptions:{
+				OggOpusEncoderWasmPath:'https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/OggOpusEncoder.wasm',
+				WebMOpusEncoderWasmPath:'https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/WebMOpusEncoder.wasm'
+			}
 		}, latency);
 
 		presenterInstance.onRecordingReady = function(packet){
