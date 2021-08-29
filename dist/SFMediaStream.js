@@ -51,7 +51,8 @@ var userInteracted = false;
 
 // Unlock mobile media security
 (function(){
-	if(!window.AudioContext) return console.error("`AudioContext` was not available");
+	const AudioContext = window.AudioContext || window.webkitAudioContext;
+	if(!AudioContext) return console.error("`AudioContext` was not available");	
 	ScarletsMedia.audioContext = new AudioContext();
 
 	var mobileMediaUnlock = function(e){
@@ -810,13 +811,49 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	scope.debug = options.debug;
 
+	scope.workerOptions = options.workerOptions;
+	
 	// Deprecated
 	scope.options = options;
 
 	var mediaType = options.video ? 'video' : 'audio';
 
+
+	let MediaRecorder = window.MediaRecorder;
+	let usingOpusMediaRecorderPolyfill = false;
+
+	if(window.OpusMediaRecorder) {
+		if(options.alwaysUsePolyfill) {
+			usingOpusMediaRecorderPolyfill = true;
+		}
+		else if(!window.MediaRecorder) {
+			usingOpusMediaRecorderPolyfill = OpusMediaRecorder.isTypeSupported(options.mimeType);
+		}
+		else if(options.mimeType && MediaRecorder.isTypeSupported(options.mimeType)) {
+			usingOpusMediaRecorderPolyfill = window.MediaRecorder === window.OpusMediaRecorder;
+		}
+		else if(options.mimeType) {
+			usingOpusMediaRecorderPolyfill = OpusMediaRecorder.isTypeSupported(options.mimeType);
+		}
+		else {
+			usingOpusMediaRecorderPolyfill = window.MediaRecorder === window.OpusMediaRecorder;
+		}
+		
+		if(usingOpusMediaRecorderPolyfill) {
+			MediaRecorder = OpusMediaRecorder;
+
+			if(mediaType === 'video') {
+				console.log("opus-media-recorder does not support video recording.");
+			}
+		}		
+	}
+
+	if (!MediaRecorder) {
+		throw "MediaRecorder is not available";
+	}
+
 	// Check supported mimeType and codecs for the recorder
-	if (options.mimeType && !MediaRecorder.isTypeSupported(options.mimeType)) {
+	if(options.mimeType && !MediaRecorder.isTypeSupported(options.mimeType)) {
 		console.log("MediaRecorder doesn't supports mimetype " + options.mimeType);
 		options.mimeType = null;
 	}
@@ -869,7 +906,12 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream, options);
+		if(usingOpusMediaRecorderPolyfill) {
+			scope.mediaRecorder = new MediaRecorder(mediaStream, options, scope.workerOptions);
+		}
+		else {
+			scope.mediaRecorder = new MediaRecorder(mediaStream, options);
+		}
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -1038,7 +1080,7 @@ var ScarletsMediaPresenter = function(options, latency){
 ScarletsMediaPresenter.isTypeSupported = function(mimeType){
 	if(!MediaSource.isTypeSupported(mimeType))
 		return "MediaSource is not supporting this type";
-	if(!MediaRecorder.isTypeSupported(mimeType))
+	if(!MediaRecorder || !MediaRecorder.isTypeSupported(mimeType) || (window.OpusMediaRecorder && !window.OpusMediaRecorder.isTypeSupported(mimeType)))
 		return "MediaRecorder is not supporting this type";
 	return "Maybe supported";
 }

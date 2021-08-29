@@ -51,7 +51,8 @@ var userInteracted = false;
 
 // Unlock mobile media security
 (function(){
-	if(!window.AudioContext) return console.error("`AudioContext` was not available");
+	const AudioContext = window.AudioContext || window.webkitAudioContext;
+	if(!AudioContext) return console.error("`AudioContext` was not available");	
 	ScarletsMedia.audioContext = new AudioContext();
 
 	var mobileMediaUnlock = function(e){
