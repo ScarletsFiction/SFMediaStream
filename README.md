@@ -32,7 +32,7 @@ var streamer = new AudioStreamer(...);
 ```
 
 ## Adding retro-compatibility 
-In case of the browser doesn't support some codec like audio/wav, audio/webm, or audio/ogg you can to add [https://github.com/kbumsik/opus-media-recorder](opus-media-recorder) before using the library. 
+In case of the browser doesn't support some codec like audio/wav, audio/webm, or audio/ogg you can to add [opus-media-recorder](https://github.com/kbumsik/opus-media-recorder) before using the library. 
 
 Safari browser actually is partially supported by using this polyfill. It able to stream audio, but is not playable by the browser.
 
