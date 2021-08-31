@@ -3,6 +3,11 @@ var BufferHeader = {
 };
 
 function getBufferHeader(type) {
+	if (!window.chrome && type === "audio/webm;codecs=opus" ) {
+		// this header is only for chrome based brosers
+		return false;
+	}
+
 	var buff = BufferHeader[type];
 	if(buff === void 0) return false;
 

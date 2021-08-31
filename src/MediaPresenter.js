@@ -27,6 +27,7 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	scope.onRecordingReady = null;
 	scope.onBufferProcess = null;
+	scope.onStop = null;
 
 	scope.mediaRecorder = null;
 	scope.recordingReady = false;
@@ -42,14 +43,56 @@ var ScarletsMediaPresenter = function(options, latency){
 
 	scope.debug = options.debug;
 
+	scope.workerOptions = options.workerOptions;
+	
 	// Deprecated
 	scope.options = options;
 
-	scope.polyfill = void 0;
-
 	var mediaType = options.video ? 'video' : 'audio';
 
+
+	let MediaRecorder = window.MediaRecorder;
+	let usingOpusMediaRecorderPolyfill = false;
+
+	if(window.OpusMediaRecorder) {
+		if(options.alwaysUsePolyfill) {
+			usingOpusMediaRecorderPolyfill = true;
+		}
+		else if(!window.MediaRecorder) {
+			if (!options.mimeType) {
+				options.mimeType = 'audio/webm;codecs=opus'; // Preferred one
+			}
+			usingOpusMediaRecorderPolyfill = OpusMediaRecorder.isTypeSupported(options.mimeType);
+		}
+		else if(options.mimeType && MediaRecorder.isTypeSupported(options.mimeType)) {
+			usingOpusMediaRecorderPolyfill = window.MediaRecorder === window.OpusMediaRecorder;
+		}
+		else if(options.mimeType) {
+			usingOpusMediaRecorderPolyfill = OpusMediaRecorder.isTypeSupported(options.mimeType);
+		}
+		else {
+			usingOpusMediaRecorderPolyfill = window.MediaRecorder === window.OpusMediaRecorder;
+		}
+		
+		if(usingOpusMediaRecorderPolyfill) {
+			MediaRecorder = OpusMediaRecorder;
+
+			if(mediaType === 'video') {
+				console.log("opus-media-recorder does not support video recording.");
+			}
+		}		
+	}
+
+	if (!MediaRecorder) {
+		throw "MediaRecorder is not available";
+	}
+
 	// Check supported mimeType and codecs for the recorder
+	if(options.mimeType && !MediaRecorder.isTypeSupported(options.mimeType)) {
+		console.log("MediaRecorder doesn't supports mimetype " + options.mimeType);
+		options.mimeType = null;
+	}
+
 	if(!options.mimeType){
 		var supportedMimeType = false;
 		var codecsList = mediaType === 'audio' ? audioCodecs : videoCodecs;
@@ -73,7 +116,8 @@ var ScarletsMediaPresenter = function(options, latency){
 				break;
 		}
 		options.mimeType = supportedMimeType;
-		console.log("mimeType: "+supportedMimeType);
+
+		if (scope.debug) console.log("mimeType: "+supportedMimeType);
 	}
 
 	var mediaGranted = function(mediaStream) {
@@ -97,7 +141,12 @@ var ScarletsMediaPresenter = function(options, latency){
 		scope.bufferHeader = null;
 		var bufferHeaderLength = false;
 
-		scope.mediaRecorder = new MediaRecorder(mediaStream, options, scope.polyfill);
+		if(usingOpusMediaRecorderPolyfill) {
+			scope.mediaRecorder = new MediaRecorder(mediaStream, options, scope.workerOptions);
+		}
+		else {
+			scope.mediaRecorder = new MediaRecorder(mediaStream, options);
+		}
 
 		if(scope.debug) console.log("MediaRecorder obtained");
 		scope.mediaRecorder.onstart = function(e) {
@@ -105,10 +154,11 @@ var ScarletsMediaPresenter = function(options, latency){
 		};
 
 		const isVideo = options.video !== void 0;
+		const headerLatency = isVideo ? 565 : 100;
 
 		scope.mediaRecorder.ondataavailable = function(e){
 			// Stream segments after the header was obtained
-			if(bufferHeaderLength !== false){
+			if (bufferHeaderLength !== false){
 				var streamingTime = Number(String(Date.now()).slice(-5, -3));
 				scope.onBufferProcess([e.data, streamingTime]);
 				return;
@@ -144,7 +194,7 @@ var ScarletsMediaPresenter = function(options, latency){
 
 			scope.recordingReady = true;
 
-			if(latency === 100) return;
+			if(latency === headerLatency) return;
 
 			// Record with the custom latency
 			scope.mediaRecorder.stop();
@@ -154,7 +204,7 @@ var ScarletsMediaPresenter = function(options, latency){
 		};
 
 		// Get first header
-		scope.mediaRecorder.start(isVideo ? 565 : 100);
+		scope.mediaRecorder.start(headerLatency);
 	}
 
 	var pendingConnect = [];
@@ -236,6 +286,9 @@ var ScarletsMediaPresenter = function(options, latency){
 	};
 
 	scope.stopRecording = function(){
+		if (!scope.recording ||!scope.mediaRecorder) {
+			return;
+		}
 		scope.recording = false;
 		scope.mediaRecorder.stop();
 
@@ -250,16 +303,19 @@ var ScarletsMediaPresenter = function(options, latency){
 
 		// scope.mediaRecorder.ondataavailable = null;
 		// scope.mediaRecorder.onstart = null;
-		// scope.bufferHeader = null;
+
+		scope.bufferHeader = null;
 
 		afterStop = true;
+
+		if (scope.onStop) scope.onStop();
 	};
 }
 
 ScarletsMediaPresenter.isTypeSupported = function(mimeType){
 	if(!MediaSource.isTypeSupported(mimeType))
 		return "MediaSource is not supporting this type";
-	if(!MediaRecorder.isTypeSupported(mimeType))
+	if(!MediaRecorder || !MediaRecorder.isTypeSupported(mimeType) || (window.OpusMediaRecorder && !window.OpusMediaRecorder.isTypeSupported(mimeType)))
 		return "MediaRecorder is not supporting this type";
 	return "Maybe supported";
 }

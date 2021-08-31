@@ -37,10 +37,10 @@ ScarletsMedia.extra = new function(){
 		var timer = setInterval(function(){
 			if(maxFade>=100) clearInterval(timer);
 			maxFade++;
-		
+
 			current = (current+increment)*1000;
 			current = Math.ceil(current)/1000;
-		
+
 			//Increasing and current is more than target
 			if((increment >= 0 && (current >= to || from >= to))
 				||
@@ -55,13 +55,13 @@ ScarletsMedia.extra = new function(){
 				if(onFinish) onFinish();
 				return;
 			}
-			
-			if(onIncrease) onIncrease(current); 
+
+			if(onIncrease) onIncrease(current);
 		}, interval);
 	}
 
 	// ===== Precise Timer =====
-	// 
+	//
 	var timeout = [];
 	var timeoutIncrement = 0;
 	self.preciseTimeout = function(func, miliseconds){
@@ -133,7 +133,7 @@ ScarletsMedia.extra = new function(){
 			}
 
 			requestAnimationFrame(preciseTimer);
-			
+
 			var currentTime = Date.now();
 			for (var i in timeout) {
 				if(timeout[i].when < currentTime){
@@ -161,6 +161,7 @@ if(moduleMode){
 	global.VideoStreamer = ScarletsVideoStreamer;
 	global.MediaPlayer = ScarletsMediaPlayer;
 	global.MediaPresenter = ScarletsMediaPresenter;
+	global.ScarletsMediaBuffer = MediaBuffer;
 }
 else{
 	global.ScarletsMedia = ScarletsMedia;
@@ -169,6 +170,7 @@ else{
 	global.ScarletsVideoStreamer = ScarletsVideoStreamer;
 	global.ScarletsMediaPlayer = ScarletsMediaPlayer;
 	global.ScarletsMediaPresenter = ScarletsMediaPresenter;
+	global.ScarletsMediaBuffer = MediaBuffer;
 }
 
 // ===== Module End =====

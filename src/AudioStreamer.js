@@ -1,7 +1,5 @@
 // Minimum 3 bufferElement
 var ScarletsAudioStreamer = function(chunksDuration){
-	var bufferElement = 3;
-
 	if(!chunksDuration) chunksDuration = 1000;
 	var chunksSeconds = chunksDuration/1000;
 
@@ -12,6 +10,8 @@ var ScarletsAudioStreamer = function(chunksDuration){
 	scope.latency = 0;
 	scope.mimeType = null;
 	scope.bufferElement = [];
+
+	scope.onStop = null;
 
 	scope.audioContext = ScarletsMedia.audioContext;
 	scope.outputNode = false; // Set this to a connectable Audio Node
@@ -54,6 +54,7 @@ var ScarletsAudioStreamer = function(chunksDuration){
 		mediaBuffer.stop();
 		scope.playing = false;
 		scope.buffering = false;
+		if (scope.onStop) scope.onStop();
 	}
 
 	scope.setBufferHeader = function(packet){
@@ -136,14 +137,16 @@ var ScarletsAudioStreamer = function(chunksDuration){
 	}
 
 	var bufferElementIndex = 0;
-	scope.realtimeBufferPlay = function(arrayBuffer){
+	scope.realtimeBufferPlay = function(packet){
 		if(scope.playing === false) return;
 
-		if(scope.debug) console.log("Receiving data", arrayBuffer[0].byteLength);
-		if(arrayBuffer[0].byteLength === 0) return;
-		arrayBuffer = arrayBuffer[0];
+		var arrayBuffer = packet[0];
+		var streamingTime = packet[1];
 
-		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + chunksSeconds + scope.audioContext.baseLatency;
+		if(scope.debug) console.log("Receiving data", arrayBuffer.byteLength);
+		if(arrayBuffer.byteLength === 0) return;
+
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - streamingTime) + chunksSeconds + scope.audioContext.baseLatency;
 
 		var index = bufferElementIndex;
 		bufferElementIndex++;
@@ -161,15 +164,18 @@ var ScarletsAudioStreamer = function(chunksDuration){
 	// ====== Synchronous Playing ======
 	// Play next audio when last audio was finished
 
-	scope.receiveBuffer = function(arrayBuffer){
+	scope.receiveBuffer = function(packet){
 		if(scope.playing === false || !mediaBuffer.append) return;
 
-		mediaBuffer.append(arrayBuffer[0]);
+		var arrayBuffer = packet[0];
+		var streamingTime = packet[1];
+
+		mediaBuffer.append(arrayBuffer);
 
 		if(audioElement.paused)
 			audioElement.play();
 
-		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) +  scope.audioContext.baseLatency + chunksSeconds;
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - streamingTime) +  scope.audioContext.baseLatency + chunksSeconds;
 		if(scope.debug) console.log("Total latency: "+scope.latency);
 	}
 }

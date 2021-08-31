@@ -61,7 +61,6 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 
 		mediaBuffer = new MediaBuffer(scope.mimeType, chunksDuration, arrayBuffer);
 
-		console.log(mediaBuffer);
 		videoElement.src = scope.objectURL = mediaBuffer.objectURL;
 	}
 
@@ -69,15 +68,18 @@ var ScarletsVideoStreamer = function(videoElement, chunksDuration){
 		scope.playing = true;
 	}
 
-	scope.receiveBuffer = function(arrayBuffer){
+	scope.receiveBuffer = function(packet){
 		if(scope.playing === false || !mediaBuffer.append) return;
 
-		mediaBuffer.append(arrayBuffer[0]);
+		var arrayBuffer = packet[0];
+		var streamingTime = packet[1];
+
+		mediaBuffer.append(arrayBuffer);
 
 		if(videoElement.paused)
 			videoElement.play();
 
-		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - arrayBuffer[1]) + scope.audioContext.baseLatency + chunksSeconds;
+		scope.latency = (Number(String(Date.now()).slice(-5, -3)) - streamingTime) + scope.audioContext.baseLatency + chunksSeconds;
 		if(scope.debug) console.log("Total latency: "+scope.latency);
 	}
 }
