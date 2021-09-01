@@ -11,12 +11,13 @@ The default configuration is intended for newer browser. If you want to build 2-
 
 ## Install with CDN link
 You can download minified js from this repository or use this CDN link
-`<script type="text/javascript" src='https://cdn.jsdelivr.net/npm/sfmediastream@latest'></script>`
+`<script type="text/javascript" src='https://cdn.jsdelivr.net/npm/sfmediastream@v1'></script>`
 
-If you want to use the old release, please modify the `latest` into a specific version.
+If you want to use the different version, please modify the `v1` into a specific version.
 
 And include it on your project
 ```js
+// Prefixed with Scarlets when imported with CDN link
 var presenter = new ScarletsMediaPresenter(...);
 var streamer = new ScarletsAudioStreamer(...);
 ```
@@ -24,15 +25,16 @@ var streamer = new ScarletsAudioStreamer(...);
 ## Install with NPM
 `npm i sfmediastream`
 
-And include it on your project
+This is for web bundler like Webpack or Browserify, and can't be used as a library for Node.js. If you want to use this recorder/effect/plugin for Node.js, the I think it may be possible by using headless browser like Puppeteer.
+
 ```js
 const {MediaPresenter, AudioStreamer, ...} = require('sfmediastream');
 var presenter = new MediaPresenter(...);
 var streamer = new AudioStreamer(...);
 ```
 
-## Adding retro-compatibility 
-In case of the browser doesn't support some codec like audio/wav, audio/webm, or audio/ogg you can to add [opus-media-recorder](https://github.com/kbumsik/opus-media-recorder) before using the library. 
+## Adding retro-compatibility
+In case of the browser doesn't support some codec like `audio/wav`, `audio/webm`, or `audio/ogg` you can to add [opus-media-recorder](https://github.com/kbumsik/opus-media-recorder) before using the library.
 
 Safari browser actually is partially supported by using this polyfill. It able to stream audio, but is not playable by the browser.
 
